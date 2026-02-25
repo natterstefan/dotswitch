@@ -1,0 +1,71 @@
+{
+  "name": "dotswitch",
+  "version": "0.1.0",
+  "description": "Quickly switch between .env files",
+  "type": "module",
+  "bin": {
+    "dotswitch": "./dist/cli.mjs"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsx src/cli.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "env",
+    "dotenv",
+    "environment",
+    "cli",
+    "nextjs",
+    "vite",
+    "monorepo",
+    "env-switch",
+    "configuration"
+  ],
+  "author": "Stefan Natter <https://natterstefan.me>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/natterstefan/dotswitch.git"
+  },
+  "bugs": {
+    "url": "https://github.com/natterstefan/dotswitch/issues"
+  },
+  "homepage": "https://github.com/natterstefan/dotswitch#readme",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@inquirer/select": "^4.1.0",
+    "commander": "^13.1.0",
+    "picocolors": "^1.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "memfs": "^4.17.0",
+    "tsdown": "^0.20.3",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.7"
+  }
+}
