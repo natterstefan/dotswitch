@@ -32,15 +32,23 @@
     "typecheck": "tsc --noEmit"
   },
   "keywords": [
+    "dotswitch",
     "env",
     "dotenv",
+    "env-switch",
+    "env-files",
+    "env-management",
     "environment",
+    "environment-variables",
+    "configuration",
     "cli",
     "nextjs",
     "vite",
+    "remix",
     "monorepo",
-    "env-switch",
-    "configuration"
+    "devtools",
+    "developer-tools",
+    "git-hooks"
   ],
   "author": "Stefan Natter <https://natterstefan.me>",
   "license": "MIT",
