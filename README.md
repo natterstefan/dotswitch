@@ -4,7 +4,10 @@
 
 [![CI](https://github.com/natterstefan/dotswitch/actions/workflows/ci.yml/badge.svg)](https://github.com/natterstefan/dotswitch/actions/workflows/ci.yml)
 
-Quickly switch between `.env` files. Copies `.env.<environment>` to `.env.local` (or a custom target) and tracks the active environment via a header comment. Works with Next.js, Vite, Remix, and any project that uses `.env` files.
+Quickly switch between `.env` files. Copies
+`.env.<environment>` to `.env.local` (or a custom target) and
+tracks the active environment via a header comment. Works with
+Next.js, Vite, Remix, and any project that uses `.env` files.
 
 ## Install
 
@@ -121,7 +124,9 @@ All commands support:
 
 ## Configuration
 
-Create a `.dotswitchrc.json` in your project root to customize behavior. Everything is optional — dotswitch works out of the box without a config file.
+Create a `.dotswitchrc.json` in your project root to customize
+behavior. Everything is optional — dotswitch works out of the
+box without a config file.
 
 ```json
 {
@@ -143,7 +148,9 @@ Create a `.dotswitchrc.json` in your project root to customize behavior. Everyth
 
 ### Custom target file
 
-By default dotswitch writes to `.env.local`, but some frameworks use `.env` directly. Set the `target` field to change this:
+By default dotswitch writes to `.env.local`, but some
+frameworks use `.env` directly. Set the `target` field to
+change this:
 
 ```json
 {
@@ -175,7 +182,8 @@ Automatically switch environments when you check out a branch.
 dotswitch hook install
 ```
 
-Now `git checkout staging/feat-login` will automatically run `dotswitch use staging`.
+Now `git checkout staging/feat-login` will automatically run
+`dotswitch use staging`.
 
 ### Patterns
 
@@ -203,6 +211,29 @@ dotswitch ls --path "./packages/*"
 
 Each directory is processed independently with labeled output.
 
+## Git worktree support
+
+dotswitch works transparently in
+[git worktrees](https://git-scm.com/docs/git-worktree). When
+you run any command from a worktree, it automatically resolves
+back to the main repo where your `.env.*` files and
+`.dotswitchrc.json` live.
+
+```bash
+# From a worktree, all commands operate on the main repo
+cd /path/to/my-worktree
+dotswitch ls          # lists envs from the main repo
+dotswitch use staging # switches in the main repo
+dotswitch hook install # installs hook in the shared .git/hooks
+```
+
+Explicit `--path` arguments are rebased automatically, so
+monorepo globs also work from worktrees:
+
+```bash
+dotswitch use staging --path "./apps/*"
+```
+
 ## How it works
 
 When you run `dotswitch use staging`, it:
@@ -211,7 +242,8 @@ When you run `dotswitch use staging`, it:
 2. Copies `.env.staging` to `.env.local`
 3. Prepends a `# dotswitch:staging` header to track the active environment
 
-The header comment is how `dotswitch ls` and `dotswitch current` know which environment is active.
+The header comment is how `dotswitch ls` and
+`dotswitch current` know which environment is active.
 
 ## Programmatic API
 
@@ -226,11 +258,20 @@ import {
   loadConfig,
   parseEnvContent,
   diffEnvMaps,
+  resolveProjectRoot,
 } from "dotswitch";
 
 const files = listEnvFiles(process.cwd());
 const active = getActiveEnv(process.cwd());
 switchEnv(process.cwd(), "staging", { backup: true });
+```
+
+In worktree-aware scripts, resolve the project root first:
+
+```ts
+const projectRoot = resolveProjectRoot(process.cwd());
+const files = listEnvFiles(projectRoot);
+switchEnv(projectRoot, "staging", { backup: true });
 ```
 
 ## Requirements

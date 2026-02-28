@@ -1,4 +1,5 @@
 import { createRequire } from "node:module";
+import path from "node:path";
 import { Command } from "commander";
 import { useCommand } from "./commands/use.js";
 import { lsCommand } from "./commands/ls.js";
@@ -6,9 +7,33 @@ import { currentCommand } from "./commands/current.js";
 import { restoreCommand } from "./commands/restore.js";
 import { diffCommand } from "./commands/diff.js";
 import { hookInstallCommand, hookRemoveCommand, hookBranchCommand } from "./commands/hook.js";
+import { resolveProjectRoot } from "./lib/git.js";
 
 const require = createRequire(import.meta.url);
 const pkg = require("../package.json") as { version: string };
+
+/**
+ * Resolve the effective path for a command.
+ * - No --path given: resolve cwd (worktrees → main repo root).
+ * - Explicit --path: rebase it relative to the main repo when in a worktree,
+ *   so glob patterns like "./apps/*" expand against the main repo.
+ */
+function resolveCommandPath(explicitPath: string | undefined): string {
+  const cwd = process.cwd();
+  const projectRoot = resolveProjectRoot(cwd);
+
+  if (!explicitPath) {
+    return projectRoot;
+  }
+
+  // Not in a worktree — use the explicit path as-is
+  if (projectRoot === cwd) return explicitPath;
+
+  // Worktree: rebase the explicit path relative to the main repo
+  const absolute = path.resolve(explicitPath);
+  const relative = path.relative(cwd, absolute);
+  return path.resolve(projectRoot, relative);
+}
 
 const program = new Command();
 
@@ -23,56 +48,57 @@ program
   .option("-f, --force", "skip confirmation if already active", false)
   .option("--no-backup", "skip .env.local backup")
   .option("-n, --dry-run", "show what would happen without making changes", false)
-  .option("-p, --path <dir>", "project directory", process.cwd())
+  .option("-p, --path <dir>", "project directory")
   .option("--hook-branch <branch>", "internal: auto-switch by branch name")
   .action(async (env: string | undefined, opts) => {
+    const projectPath = resolveCommandPath(opts.path);
     if (opts.hookBranch) {
-      hookBranchCommand(opts.hookBranch, { path: opts.path });
+      hookBranchCommand(opts.hookBranch, { path: projectPath });
       return;
     }
     await useCommand(env, {
       force: opts.force,
       backup: opts.backup,
       dryRun: opts.dryRun,
-      path: opts.path,
+      path: projectPath,
     });
   });
 
 program
   .command("ls")
   .description("List available .env.* files")
-  .option("-p, --path <dir>", "project directory", process.cwd())
+  .option("-p, --path <dir>", "project directory")
   .option("--json", "output as JSON", false)
   .action((opts) => {
-    lsCommand({ path: opts.path, json: opts.json });
+    lsCommand({ path: resolveCommandPath(opts.path), json: opts.json });
   });
 
 program
   .command("current")
   .description("Show the currently active environment")
-  .option("-p, --path <dir>", "project directory", process.cwd())
+  .option("-p, --path <dir>", "project directory")
   .option("--json", "output as JSON", false)
   .action((opts) => {
-    currentCommand({ path: opts.path, json: opts.json });
+    currentCommand({ path: resolveCommandPath(opts.path), json: opts.json });
   });
 
 program
   .command("restore")
   .description("Restore .env.local from the backup file")
-  .option("-p, --path <dir>", "project directory", process.cwd())
+  .option("-p, --path <dir>", "project directory")
   .action((opts) => {
-    restoreCommand({ path: opts.path });
+    restoreCommand({ path: resolveCommandPath(opts.path) });
   });
 
 program
   .command("diff <env1> [env2]")
   .description("Compare keys between two env files (defaults: .env.local vs env1)")
-  .option("-p, --path <dir>", "project directory", process.cwd())
+  .option("-p, --path <dir>", "project directory")
   .option("--show-values", "show actual values in the diff", false)
   .option("--json", "output as JSON", false)
   .action((env1: string, env2: string | undefined, opts) => {
     diffCommand(env1, env2, {
-      path: opts.path,
+      path: resolveCommandPath(opts.path),
       showValues: opts.showValues,
       json: opts.json,
     });
@@ -85,17 +111,17 @@ const hookCmd = program
 hookCmd
   .command("install")
   .description("Install the post-checkout git hook")
-  .option("-p, --path <dir>", "project directory", process.cwd())
+  .option("-p, --path <dir>", "project directory")
   .action((opts) => {
-    hookInstallCommand({ path: opts.path });
+    hookInstallCommand({ path: resolveCommandPath(opts.path) });
   });
 
 hookCmd
   .command("remove")
   .description("Remove the post-checkout git hook")
-  .option("-p, --path <dir>", "project directory", process.cwd())
+  .option("-p, --path <dir>", "project directory")
   .action((opts) => {
-    hookRemoveCommand({ path: opts.path });
+    hookRemoveCommand({ path: resolveCommandPath(opts.path) });
   });
 
 program.parse();

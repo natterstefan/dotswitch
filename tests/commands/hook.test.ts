@@ -50,7 +50,7 @@ describe("hookInstallCommand", () => {
 
   it("warns when no hook mappings defined", () => {
     mockedLoadConfig.mockReturnValue({ target: ".env.local", exclude: [], hooks: {} });
-    const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     hookInstallCommand({ path: "/p" });
 

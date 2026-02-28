@@ -115,16 +115,19 @@ describe("env", () => {
       fs.copyFileSync = () => {
         throw new Error("Permission denied");
       };
-      const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-      const result = backupEnvLocal(dir, fs);
+      try {
+        const result = backupEnvLocal(dir, fs);
 
-      expect(result).toBe(false);
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining("Failed to back up .env.local"),
-      );
-      consoleSpy.mockRestore();
-      fs.copyFileSync = originalCopyFileSync;
+        expect(result).toBe(false);
+        expect(consoleSpy).toHaveBeenCalledWith(
+          expect.stringContaining("Failed to back up .env.local"),
+        );
+      } finally {
+        consoleSpy.mockRestore();
+        fs.copyFileSync = originalCopyFileSync;
+      }
     });
   });
 
