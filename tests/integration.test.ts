@@ -290,6 +290,40 @@ describe("integration: real filesystem", () => {
       expect(getActiveEnv(projectRoot)).toBe("staging");
     });
 
+    it("operates locally when worktree has tracked env files", () => {
+      // Simulate tracked env files checked out into the worktree
+      fs.writeFileSync(
+        path.join(worktreeDir, ".env.staging"),
+        "API=https://wt-staging.example.com\n",
+      );
+      fs.writeFileSync(
+        path.join(worktreeDir, ".env.production"),
+        "API=https://wt-production.example.com\n",
+      );
+
+      // resolveProjectRoot still returns main repo
+      expect(resolveProjectRoot(worktreeDir)).toBe(mainRepoDir);
+
+      // But listEnvFiles on the worktree dir finds the local files
+      const files = listEnvFiles(worktreeDir);
+      expect(files.map((f) => f.env).sort()).toEqual(["production", "staging"]);
+
+      // switchEnv writes .env.local in the worktree, not the main repo
+      switchEnv(worktreeDir, "staging", { backup: false });
+
+      const wtContent = fs.readFileSync(
+        path.join(worktreeDir, ".env.local"),
+        "utf-8",
+      );
+      expect(wtContent).toContain("# dotswitch:staging");
+      expect(wtContent).toContain("API=https://wt-staging.example.com");
+
+      // Main repo should NOT have a .env.local from this operation
+      expect(
+        fs.existsSync(path.join(mainRepoDir, ".env.local")),
+      ).toBe(false);
+    });
+
     it("rebases explicit --path from worktree to main repo", () => {
       // Simulate what cli.ts resolveCommandPath does for an explicit --path
       // when cwd is the worktree root

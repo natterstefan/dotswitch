@@ -1,4 +1,5 @@
 import { createRequire } from "node:module";
+import fs from "node:fs";
 import path from "node:path";
 import { Command } from "commander";
 import { useCommand } from "./commands/use.js";
@@ -8,13 +9,29 @@ import { restoreCommand } from "./commands/restore.js";
 import { diffCommand } from "./commands/diff.js";
 import { hookInstallCommand, hookRemoveCommand, hookBranchCommand } from "./commands/hook.js";
 import { resolveProjectRoot } from "./lib/git.js";
+import { EXCLUDED_ENV_FILES } from "./lib/constants.js";
 
 const require = createRequire(import.meta.url);
 const pkg = require("../package.json") as { version: string };
 
 /**
+ * Check whether a directory contains any `.env.*` source files
+ * (i.e. files that dotswitch would operate on, excluding standard non-source files).
+ */
+function hasEnvFiles(dir: string): boolean {
+  try {
+    return fs.readdirSync(dir).some(
+      (name) => name.startsWith(".env.") && !EXCLUDED_ENV_FILES.has(name),
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Resolve the effective path for a command.
- * - No --path given: resolve cwd (worktrees → main repo root).
+ * - No --path given: if in a worktree with local env files, operate locally;
+ *   otherwise resolve to the main repo root.
  * - Explicit --path: rebase it relative to the main repo when in a worktree,
  *   so glob patterns like "./apps/*" expand against the main repo.
  */
@@ -23,6 +40,9 @@ function resolveCommandPath(explicitPath: string | undefined): string {
   const projectRoot = resolveProjectRoot(cwd);
 
   if (!explicitPath) {
+    if (projectRoot !== cwd && hasEnvFiles(cwd)) {
+      return cwd;
+    }
     return projectRoot;
   }
 
