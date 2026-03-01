@@ -25,12 +25,13 @@ jobs:
     needs: release-please
     if: ${{ needs.release-please.outputs.release_created }}
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "22.x"
-          registry-url: "https://registry.npmjs.org"
+          node-version: "24.x"
       - run: npm ci
       - run: npm run build
       - run: npm test
