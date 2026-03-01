@@ -3,6 +3,10 @@
 ![dotswitch banner](.github/banner.png)
 
 [![CI](https://github.com/natterstefan/dotswitch/actions/workflows/ci.yml/badge.svg)](https://github.com/natterstefan/dotswitch/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/dotswitch)](https://www.npmjs.com/package/dotswitch)
+[![npm downloads](https://img.shields.io/npm/dm/dotswitch)](https://www.npmjs.com/package/dotswitch)
+[![node](https://img.shields.io/node/v/dotswitch)](https://www.npmjs.com/package/dotswitch)
+[![license](https://img.shields.io/npm/l/dotswitch)](https://github.com/natterstefan/dotswitch/blob/main/LICENSE)
 
 Quickly switch between `.env` files. Copies
 `.env.<environment>` to `.env.local` (or a custom target) and
