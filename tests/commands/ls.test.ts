@@ -43,7 +43,7 @@ describe("lsCommand", () => {
 
   it("warns when no env files found", () => {
     mockedListEnvFiles.mockReturnValue([]);
-    const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     lsCommand({ path: "/p", json: false });
 
@@ -54,7 +54,7 @@ describe("lsCommand", () => {
 
   it("sets exit code 1 when no env files found", () => {
     mockedListEnvFiles.mockReturnValue([]);
-    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
 
     lsCommand({ path: "/p", json: false });
 

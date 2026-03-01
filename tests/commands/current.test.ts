@@ -47,7 +47,7 @@ describe("currentCommand", () => {
   it("warns when no active environment", () => {
     Object.defineProperty(process.stdout, "isTTY", { value: true, configurable: true });
     mockedGetActiveEnv.mockReturnValue(null);
-    const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     currentCommand({ path: "/project", json: false });
 
@@ -59,7 +59,7 @@ describe("currentCommand", () => {
   it("sets exit code 1 when no active environment", () => {
     Object.defineProperty(process.stdout, "isTTY", { value: true, configurable: true });
     mockedGetActiveEnv.mockReturnValue(null);
-    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
 
     currentCommand({ path: "/project", json: false });
 

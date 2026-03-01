@@ -8,7 +8,7 @@ export const logger = {
     console.log(pc.cyan(message));
   },
   warn(message: string): void {
-    console.log(pc.yellow(`⚠ ${message}`));
+    console.error(pc.yellow(`⚠ ${message}`));
   },
   error(message: string): void {
     console.error(pc.red(`✗ ${message}`));

@@ -10,3 +10,4 @@ export {
 export { parseEnvContent, diffEnvMaps } from "./lib/parser.js";
 export type { EnvDiff } from "./lib/parser.js";
 export type { EnvFile, UseOptions, CommonOptions } from "./types.js";
+export { resolveCommonGitDir, resolveProjectRoot } from "./lib/git.js";
