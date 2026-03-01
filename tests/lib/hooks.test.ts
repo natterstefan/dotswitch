@@ -6,7 +6,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { matchBranchToEnv, installHook, removeHook } from "../../src/lib/hooks.js";
 
 function git(cwd: string, ...args: string[]): string {
-  return execFileSync("git", args, { cwd, encoding: "utf-8" }).trim();
+  return execFileSync("git", ["-c", "user.name=test", "-c", "user.email=test@test.com", ...args], { cwd, encoding: "utf-8" }).trim();
 }
 
 describe("hooks", () => {
