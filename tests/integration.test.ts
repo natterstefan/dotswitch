@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import fs from "node:fs";
 import os from "node:os";
@@ -11,6 +12,12 @@ import {
 } from "../src/lib/env.js";
 import { parseEnvContent, diffEnvMaps } from "../src/lib/parser.js";
 import { loadConfig } from "../src/lib/config.js";
+import { resolveProjectRoot } from "../src/lib/git.js";
+import { installHook } from "../src/lib/hooks.js";
+
+function git(cwd: string, ...args: string[]): string {
+  return execFileSync("git", ["-c", "user.name=test", "-c", "user.email=test@test.com", ...args], { cwd, encoding: "utf-8" }).trim();
+}
 
 describe("integration: real filesystem", () => {
   let tmpDir: string;
@@ -28,10 +35,19 @@ describe("integration: real filesystem", () => {
   }
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "dotswitch-integration-"));
+    tmpDir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "dotswitch-integration-")));
   });
 
   afterEach(() => {
+    // Remove worktrees before deleting tmpDir so git doesn't leave stale entries
+    for (const entry of fs.readdirSync(tmpDir)) {
+      const dotGit = path.join(tmpDir, entry, ".git");
+      try {
+        if (fs.statSync(dotGit).isDirectory()) {
+          execFileSync("git", ["-C", path.join(tmpDir, entry), "worktree", "prune"], { stdio: "pipe" });
+        }
+      } catch { /* not a repo — skip */ }
+    }
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
@@ -171,6 +187,180 @@ describe("integration: real filesystem", () => {
       expect(readFile(".env")).toContain("# dotswitch:staging");
       expect(readFile(".env")).toContain("API=staging");
       expect(getActiveEnv(tmpDir, undefined, config)).toBe("staging");
+    });
+  });
+
+  describe("worktree support", () => {
+    let mainRepoDir: string;
+    let worktreeDir: string;
+
+    beforeEach(() => {
+      mainRepoDir = path.join(tmpDir, "main-repo");
+      worktreeDir = path.join(tmpDir, "my-feature");
+
+      // Create a real git repo with env files
+      fs.mkdirSync(mainRepoDir, { recursive: true });
+      git(mainRepoDir, "init");
+      git(mainRepoDir, "commit", "--allow-empty", "-m", "init");
+
+      fs.writeFileSync(
+        path.join(mainRepoDir, ".env.staging"),
+        "API=https://staging.example.com\n",
+      );
+      fs.writeFileSync(
+        path.join(mainRepoDir, ".env.production"),
+        "API=https://api.example.com\n",
+      );
+      fs.writeFileSync(
+        path.join(mainRepoDir, ".dotswitchrc.json"),
+        JSON.stringify({ hooks: { main: "production" } }),
+      );
+
+      // Create a real worktree
+      git(mainRepoDir, "worktree", "add", worktreeDir, "-b", "my-feature");
+    });
+
+    it("resolveProjectRoot returns main repo from worktree", () => {
+      expect(resolveProjectRoot(worktreeDir)).toBe(mainRepoDir);
+    });
+
+    it("resolveProjectRoot returns dir as-is for normal repo", () => {
+      expect(resolveProjectRoot(mainRepoDir)).toBe(mainRepoDir);
+    });
+
+    it("lists env files from main repo when running in worktree", () => {
+      const projectRoot = resolveProjectRoot(worktreeDir);
+      const files = listEnvFiles(projectRoot);
+
+      expect(files.map((f) => f.env).sort()).toEqual(["production", "staging"]);
+    });
+
+    it("switches env in main repo from worktree", () => {
+      const projectRoot = resolveProjectRoot(worktreeDir);
+
+      switchEnv(projectRoot, "staging", { backup: false });
+
+      const content = fs.readFileSync(
+        path.join(mainRepoDir, ".env.local"),
+        "utf-8",
+      );
+      expect(content).toContain("# dotswitch:staging");
+      expect(content).toContain("API=https://staging.example.com");
+      expect(fs.existsSync(path.join(worktreeDir, ".env.local"))).toBe(false);
+    });
+
+    it("reads active env from main repo when in worktree", () => {
+      const projectRoot = resolveProjectRoot(worktreeDir);
+
+      switchEnv(projectRoot, "production", { backup: false });
+      expect(getActiveEnv(projectRoot)).toBe("production");
+    });
+
+    it("loads config from main repo when in worktree", () => {
+      const projectRoot = resolveProjectRoot(worktreeDir);
+      const config = loadConfig(projectRoot);
+
+      expect(config.hooks).toEqual({ main: "production" });
+    });
+
+    it("installs hook in shared .git/hooks from worktree", () => {
+      const result = installHook(worktreeDir);
+
+      expect(result.created).toBe(true);
+      expect(result.path).toBe(
+        path.join(mainRepoDir, ".git", "hooks", "post-checkout"),
+      );
+      expect(fs.existsSync(result.path)).toBe(true);
+    });
+
+    it("full workflow: switch, backup, restore from worktree", () => {
+      const projectRoot = resolveProjectRoot(worktreeDir);
+
+      switchEnv(projectRoot, "staging", { backup: false });
+      expect(getActiveEnv(projectRoot)).toBe("staging");
+
+      switchEnv(projectRoot, "production", { backup: true });
+      expect(getActiveEnv(projectRoot)).toBe("production");
+
+      expect(
+        fs.existsSync(path.join(mainRepoDir, ".env.local.backup")),
+      ).toBe(true);
+
+      restoreEnvLocal(projectRoot);
+      expect(getActiveEnv(projectRoot)).toBe("staging");
+    });
+
+    it("operates locally when worktree has tracked env files", () => {
+      // Simulate tracked env files checked out into the worktree
+      fs.writeFileSync(
+        path.join(worktreeDir, ".env.staging"),
+        "API=https://wt-staging.example.com\n",
+      );
+      fs.writeFileSync(
+        path.join(worktreeDir, ".env.production"),
+        "API=https://wt-production.example.com\n",
+      );
+
+      // resolveProjectRoot still returns main repo
+      expect(resolveProjectRoot(worktreeDir)).toBe(mainRepoDir);
+
+      // But listEnvFiles on the worktree dir finds the local files
+      const files = listEnvFiles(worktreeDir);
+      expect(files.map((f) => f.env).sort()).toEqual(["production", "staging"]);
+
+      // switchEnv writes .env.local in the worktree, not the main repo
+      switchEnv(worktreeDir, "staging", { backup: false });
+
+      const wtContent = fs.readFileSync(
+        path.join(worktreeDir, ".env.local"),
+        "utf-8",
+      );
+      expect(wtContent).toContain("# dotswitch:staging");
+      expect(wtContent).toContain("API=https://wt-staging.example.com");
+
+      // Main repo should NOT have a .env.local from this operation
+      expect(
+        fs.existsSync(path.join(mainRepoDir, ".env.local")),
+      ).toBe(false);
+    });
+
+    it("rebases explicit --path from worktree to main repo", () => {
+      // Simulate what cli.ts resolveCommandPath does for an explicit --path
+      // when cwd is the worktree root
+      const cwd = worktreeDir;
+      const projectRoot = resolveProjectRoot(cwd);
+
+      // Explicit --path "./apps" → rebased to main repo
+      const rawPath = path.resolve(cwd, "./apps");
+      const relative = path.relative(cwd, rawPath);
+      const rebased = path.resolve(projectRoot, relative);
+
+      expect(rebased).toBe(path.join(mainRepoDir, "apps"));
+    });
+  });
+
+  describe("programmatic API with worktrees", () => {
+    it("works end-to-end using exported functions", () => {
+      // This tests the public API surface that npm consumers would use
+      const mainRepoDir = path.join(tmpDir, "lib-test-repo");
+      const worktreeDir = path.join(tmpDir, "lib-test-wt");
+
+      fs.mkdirSync(mainRepoDir, { recursive: true });
+      git(mainRepoDir, "init");
+      git(mainRepoDir, "commit", "--allow-empty", "-m", "init");
+      git(mainRepoDir, "worktree", "add", worktreeDir, "-b", "feat");
+
+      fs.writeFileSync(path.join(mainRepoDir, ".env.dev"), "MODE=dev\n");
+
+      // Consumer resolves the project root, then uses other APIs
+      const projectRoot = resolveProjectRoot(worktreeDir);
+      expect(projectRoot).toBe(mainRepoDir);
+
+      const files = listEnvFiles(projectRoot);
+      expect(files).toHaveLength(1);
+
+      switchEnv(projectRoot, "dev", { backup: false });
+      expect(getActiveEnv(projectRoot)).toBe("dev");
     });
   });
 });

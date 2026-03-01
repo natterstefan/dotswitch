@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { resolveCommonGitDir } from "./git.js";
 
 const HOOK_FILENAME = "post-checkout";
 
@@ -17,12 +18,9 @@ ${HOOK_MARKER_END}`;
 }
 
 function getHooksDir(dir: string): string | null {
-  // Check for .git directory
-  const gitDir = path.join(dir, ".git");
-  if (!fs.existsSync(gitDir)) return null;
-
-  const hooksDir = path.join(gitDir, "hooks");
-  return hooksDir;
+  const gitDir = resolveCommonGitDir(dir);
+  if (!gitDir) return null;
+  return path.join(gitDir, "hooks");
 }
 
 export function installHook(dir: string): { created: boolean; path: string } {
