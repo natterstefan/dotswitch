@@ -94,9 +94,9 @@ describe("diffCommand", () => {
     diffCommand("staging", "production", { path: "/p", showValues: false, json: true });
 
     const output = JSON.parse(consoleSpy.mock.calls[0][0] as string);
-    expect(output.added).toEqual(["NEW"]);
-    expect(output.removed).toEqual(["OLD"]);
-    expect(output.changed).toEqual(["API"]);
+    expect(output.added).toStrictEqual(["NEW"]);
+    expect(output.removed).toStrictEqual(["OLD"]);
+    expect(output.changed).toStrictEqual(["API"]);
   });
 
   it("--show-values includes values in JSON output", () => {
@@ -112,8 +112,8 @@ describe("diffCommand", () => {
     diffCommand("staging", "production", { path: "/p", showValues: true, json: true });
 
     const output = JSON.parse(consoleSpy.mock.calls[0][0] as string);
-    expect(output.details.added).toEqual({ NEW: "y" });
-    expect(output.details.changed).toEqual({ API: { from: "staging", to: "prod" } });
+    expect(output.details.added).toStrictEqual({ NEW: "y" });
+    expect(output.details.changed).toStrictEqual({ API: { from: "staging", to: "prod" } });
   });
 
   it("errors when file not found", () => {

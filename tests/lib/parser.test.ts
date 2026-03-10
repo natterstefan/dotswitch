@@ -40,42 +40,42 @@ describe("parser", () => {
       const from = new Map([["A", "1"]]);
       const to = new Map([["A", "1"], ["B", "2"]]);
       const diff = diffEnvMaps(from, to);
-      expect(diff.added).toEqual(["B"]);
-      expect(diff.removed).toEqual([]);
-      expect(diff.changed).toEqual([]);
+      expect(diff.added).toStrictEqual(["B"]);
+      expect(diff.removed).toStrictEqual([]);
+      expect(diff.changed).toStrictEqual([]);
     });
 
     it("detects removed keys", () => {
       const from = new Map([["A", "1"], ["B", "2"]]);
       const to = new Map([["A", "1"]]);
       const diff = diffEnvMaps(from, to);
-      expect(diff.removed).toEqual(["B"]);
-      expect(diff.added).toEqual([]);
+      expect(diff.removed).toStrictEqual(["B"]);
+      expect(diff.added).toStrictEqual([]);
     });
 
     it("detects changed keys", () => {
       const from = new Map([["A", "1"]]);
       const to = new Map([["A", "2"]]);
       const diff = diffEnvMaps(from, to);
-      expect(diff.changed).toEqual(["A"]);
+      expect(diff.changed).toStrictEqual(["A"]);
     });
 
     it("detects unchanged keys", () => {
       const from = new Map([["A", "1"]]);
       const to = new Map([["A", "1"]]);
       const diff = diffEnvMaps(from, to);
-      expect(diff.unchanged).toEqual(["A"]);
-      expect(diff.added).toEqual([]);
-      expect(diff.removed).toEqual([]);
-      expect(diff.changed).toEqual([]);
+      expect(diff.unchanged).toStrictEqual(["A"]);
+      expect(diff.added).toStrictEqual([]);
+      expect(diff.removed).toStrictEqual([]);
+      expect(diff.changed).toStrictEqual([]);
     });
 
     it("sorts results alphabetically", () => {
       const from = new Map([["C", "1"], ["A", "1"]]);
       const to = new Map([["B", "2"], ["D", "2"]]);
       const diff = diffEnvMaps(from, to);
-      expect(diff.added).toEqual(["B", "D"]);
-      expect(diff.removed).toEqual(["A", "C"]);
+      expect(diff.added).toStrictEqual(["B", "D"]);
+      expect(diff.removed).toStrictEqual(["A", "C"]);
     });
   });
 });

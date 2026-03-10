@@ -134,21 +134,65 @@ All commands support:
 
 ## Configuration
 
-Create a `.dotswitchrc.json` in your project root to customize
-behavior. Everything is optional — dotswitch works out of the
-box without a config file.
+Create a `dotswitch.config.ts` (or `.js`/`.mjs`/`.cjs`) in your project
+root to customize behavior. Everything is optional — dotswitch
+works out of the box without a config file.
 
-```json
-{
-  "target": ".env.local",
-  "exclude": [".env.test"],
-  "hooks": {
+### TypeScript (recommended)
+
+```ts
+// dotswitch.config.ts
+import { defineConfig } from "dotswitch";
+
+export default defineConfig({
+  target: ".env.local",
+  exclude: [".env.test"],
+  hooks: {
     "main": "production",
     "staging/*": "staging",
-    "dev*": "development"
-  }
-}
+    "dev*": "development",
+  },
+});
 ```
+
+### JavaScript (ESM)
+
+```js
+// dotswitch.config.js
+
+/** @type {import("dotswitch").DotswitchConfig} */
+export default {
+  target: ".env.local",
+  exclude: [".env.test"],
+  hooks: {
+    "main": "production",
+    "staging/*": "staging",
+  },
+};
+```
+
+### JavaScript (CommonJS)
+
+```js
+// dotswitch.config.cjs
+const { defineConfig } = require("dotswitch");
+
+module.exports = defineConfig({
+  target: ".env.local",
+  exclude: [".env.test"],
+});
+```
+
+### Config file resolution order
+
+dotswitch searches for config files in this order (first match wins):
+
+1. `dotswitch.config.ts`
+2. `dotswitch.config.js`
+3. `dotswitch.config.mjs`
+4. `dotswitch.config.cjs`
+
+### Options
 
 | Field | Default | Description |
 |-------|---------|-------------|
@@ -162,10 +206,13 @@ By default dotswitch writes to `.env.local`, but some
 frameworks use `.env` directly. Set the `target` field to
 change this:
 
-```json
-{
-  "target": ".env"
-}
+```ts
+// dotswitch.config.ts
+import { defineConfig } from "dotswitch";
+
+export default defineConfig({
+  target: ".env",
+});
 ```
 
 ## Git hook auto-switching
@@ -174,16 +221,19 @@ Automatically switch environments when you check out a branch.
 
 ### Setup
 
-1. Add branch mappings to `.dotswitchrc.json`:
+1. Add branch mappings to your config:
 
-```json
-{
-  "hooks": {
+```ts
+// dotswitch.config.ts
+import { defineConfig } from "dotswitch";
+
+export default defineConfig({
+  hooks: {
     "main": "production",
     "staging/*": "staging",
-    "develop": "development"
-  }
-}
+    "develop": "development",
+  },
+});
 ```
 
 2. Install the git hook:
@@ -227,7 +277,7 @@ dotswitch works transparently in
 [git worktrees](https://git-scm.com/docs/git-worktree). When
 you run any command from a worktree, it automatically resolves
 back to the main repo where your `.env.*` files and
-`.dotswitchrc.json` live.
+config live.
 
 ```bash
 # From a worktree, all commands operate on the main repo
@@ -286,6 +336,7 @@ import {
   getActiveEnv,
   restoreEnvLocal,
   loadConfig,
+  defineConfig,
   parseEnvContent,
   diffEnvMaps,
   resolveProjectRoot,

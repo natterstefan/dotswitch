@@ -66,6 +66,7 @@
   "dependencies": {
     "@inquirer/select": "^4.1.0",
     "commander": "^13.1.0",
+    "jiti": "^2.6.1",
     "picocolors": "^1.1.1"
   },
   "devDependencies": {

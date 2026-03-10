@@ -73,7 +73,7 @@ describe("currentCommand", () => {
     currentCommand({ path: "/project", json: true });
 
     const output = JSON.parse(consoleSpy.mock.calls[0][0] as string);
-    expect(output).toEqual({ active: "staging" });
+    expect(output).toStrictEqual({ active: "staging" });
   });
 
   it("--json outputs null when no active env", () => {
@@ -83,7 +83,7 @@ describe("currentCommand", () => {
     currentCommand({ path: "/project", json: true });
 
     const output = JSON.parse(consoleSpy.mock.calls[0][0] as string);
-    expect(output).toEqual({ active: null });
+    expect(output).toStrictEqual({ active: null });
     expect(process.exitCode).toBe(1);
   });
 

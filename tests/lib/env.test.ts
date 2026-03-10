@@ -21,7 +21,7 @@ describe("env", () => {
 
       const files = listEnvFiles(dir, fs);
       expect(files).toHaveLength(2);
-      expect(files.map((f) => f.env)).toEqual(["production", "staging"]);
+      expect(files.map((f) => f.env)).toStrictEqual(["production", "staging"]);
     });
 
     it("marks the active env file", () => {
@@ -41,7 +41,7 @@ describe("env", () => {
     it("returns empty array if no env files", () => {
       const { fs, dir } = setupMockProject({});
       const files = listEnvFiles(dir, fs);
-      expect(files).toEqual([]);
+      expect(files).toStrictEqual([]);
     });
 
     it("respects config exclude list", () => {
@@ -52,7 +52,7 @@ describe("env", () => {
       });
       const config = { target: ".env.local", exclude: [".env.test"], hooks: {} };
       const files = listEnvFiles(dir, fs, config);
-      expect(files.map((f) => f.env)).toEqual(["production", "staging"]);
+      expect(files.map((f) => f.env)).toStrictEqual(["production", "staging"]);
     });
 
     it("respects custom target in config", () => {
