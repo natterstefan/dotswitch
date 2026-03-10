@@ -1,18 +1,18 @@
-import fs from "node:fs";
-import path from "node:path";
-import { EXCLUDED_ENV_FILES } from "./constants.js";
-import { addTrackerHeader, parseTrackerHeader } from "./tracker.js";
-import { logger } from "./logger.js";
-import { loadConfig, getTargetFile, getBackupFile } from "./config.js";
-import type { DotswitchConfig } from "./config.js";
-import type { EnvFile } from "../types.js";
+import fs from 'node:fs'
+import path from 'node:path'
+import type { EnvFile } from '../types.js'
+import type { DotswitchConfig } from './config.js'
+import { getBackupFile, getTargetFile, loadConfig } from './config.js'
+import { EXCLUDED_ENV_FILES } from './constants.js'
+import { logger } from './logger.js'
+import { addTrackerHeader, parseTrackerHeader } from './tracker.js'
 
 function resolveConfig(
   dir: string,
   config: DotswitchConfig | undefined,
   fsModule: typeof fs,
 ): DotswitchConfig {
-  return config ?? loadConfig(dir, fsModule);
+  return config ?? loadConfig(dir, fsModule)
 }
 
 export function listEnvFiles(
@@ -20,35 +20,31 @@ export function listEnvFiles(
   fsModule: typeof fs = fs,
   config?: DotswitchConfig,
 ): EnvFile[] {
-  const cfg = resolveConfig(dir, config, fsModule);
-  const entries = fsModule.readdirSync(dir);
-  const activeEnv = getActiveEnv(dir, fsModule, cfg);
+  const cfg = resolveConfig(dir, config, fsModule)
+  const entries = fsModule.readdirSync(dir)
+  const activeEnv = getActiveEnv(dir, fsModule, cfg)
 
-  const target = getTargetFile(cfg);
-  const backup = getBackupFile(cfg);
+  const target = getTargetFile(cfg)
+  const backup = getBackupFile(cfg)
   const excluded = new Set([
     ...EXCLUDED_ENV_FILES,
     ...cfg.exclude,
     target,
     backup,
-  ]);
+  ])
 
   return entries
-    .filter(
-      (name) =>
-        name.startsWith(".env.") &&
-        !excluded.has(name),
-    )
+    .filter(name => name.startsWith('.env.') && !excluded.has(name))
     .sort()
-    .map((name) => {
-      const env = name.replace(/^\.env\./, "");
+    .map(name => {
+      const env = name.replace(/^\.env\./, '')
       return {
         name,
         env,
         path: path.join(dir, name),
         active: env === activeEnv,
-      };
-    });
+      }
+    })
 }
 
 export function getActiveEnv(
@@ -56,13 +52,13 @@ export function getActiveEnv(
   fsModule: typeof fs = fs,
   config?: DotswitchConfig,
 ): string | null {
-  const cfg = resolveConfig(dir, config, fsModule);
-  const targetPath = path.join(dir, getTargetFile(cfg));
+  const cfg = resolveConfig(dir, config, fsModule)
+  const targetPath = path.join(dir, getTargetFile(cfg))
   try {
-    const content = fsModule.readFileSync(targetPath, "utf-8");
-    return parseTrackerHeader(content);
+    const content = fsModule.readFileSync(targetPath, 'utf-8')
+    return parseTrackerHeader(content)
   } catch {
-    return null;
+    return null
   }
 }
 
@@ -71,21 +67,21 @@ export function backupEnvLocal(
   fsModule: typeof fs = fs,
   config?: DotswitchConfig,
 ): boolean {
-  const cfg = resolveConfig(dir, config, fsModule);
-  const target = getTargetFile(cfg);
-  const targetPath = path.join(dir, target);
-  const backupPath = path.join(dir, getBackupFile(cfg));
+  const cfg = resolveConfig(dir, config, fsModule)
+  const target = getTargetFile(cfg)
+  const targetPath = path.join(dir, target)
+  const backupPath = path.join(dir, getBackupFile(cfg))
   try {
     if (fsModule.existsSync(targetPath)) {
-      fsModule.copyFileSync(targetPath, backupPath);
-      return true;
+      fsModule.copyFileSync(targetPath, backupPath)
+      return true
     }
-    return false;
+    return false
   } catch (error) {
     logger.warn(
       `Failed to back up ${target}: ${error instanceof Error ? error.message : String(error)}`,
-    );
-    return false;
+    )
+    return false
   }
 }
 
@@ -94,17 +90,17 @@ export function restoreEnvLocal(
   fsModule: typeof fs = fs,
   config?: DotswitchConfig,
 ): void {
-  const cfg = resolveConfig(dir, config, fsModule);
-  const target = getTargetFile(cfg);
-  const backup = getBackupFile(cfg);
-  const backupPath = path.join(dir, backup);
-  const targetPath = path.join(dir, target);
+  const cfg = resolveConfig(dir, config, fsModule)
+  const target = getTargetFile(cfg)
+  const backup = getBackupFile(cfg)
+  const backupPath = path.join(dir, backup)
+  const targetPath = path.join(dir, target)
 
   if (!fsModule.existsSync(backupPath)) {
-    throw new Error(`No backup file found (${backup})`);
+    throw new Error(`No backup file found (${backup})`)
   }
 
-  fsModule.copyFileSync(backupPath, targetPath);
+  fsModule.copyFileSync(backupPath, targetPath)
 }
 
 export function switchEnv(
@@ -114,20 +110,20 @@ export function switchEnv(
   fsModule: typeof fs = fs,
   config?: DotswitchConfig,
 ): void {
-  const cfg = resolveConfig(dir, config, fsModule);
-  const srcDir = options.sourceDir ?? dir;
-  const sourcePath = path.join(srcDir, `.env.${env}`);
-  const targetPath = path.join(dir, getTargetFile(cfg));
+  const cfg = resolveConfig(dir, config, fsModule)
+  const srcDir = options.sourceDir ?? dir
+  const sourcePath = path.join(srcDir, `.env.${env}`)
+  const targetPath = path.join(dir, getTargetFile(cfg))
 
   if (!fsModule.existsSync(sourcePath)) {
-    throw new Error(`Environment file .env.${env} does not exist`);
+    throw new Error(`Environment file .env.${env} does not exist`)
   }
 
   if (options.backup) {
-    backupEnvLocal(dir, fsModule, cfg);
+    backupEnvLocal(dir, fsModule, cfg)
   }
 
-  const content = fsModule.readFileSync(sourcePath, "utf-8");
-  const tracked = addTrackerHeader(content, env);
-  fsModule.writeFileSync(targetPath, tracked, "utf-8");
+  const content = fsModule.readFileSync(sourcePath, 'utf-8')
+  const tracked = addTrackerHeader(content, env)
+  fsModule.writeFileSync(targetPath, tracked, 'utf-8')
 }

@@ -1,5 +1,5 @@
-import fs from "node:fs";
-import path from "node:path";
+import fs from 'node:fs'
+import path from 'node:path'
 
 /**
  * Resolve a path pattern that may contain a simple glob (* wildcard).
@@ -8,30 +8,30 @@ import path from "node:path";
  */
 export function resolvePaths(pattern: string): string[] {
   // Not a glob — return as-is
-  if (!pattern.includes("*")) {
-    return [path.resolve(pattern)];
+  if (!pattern.includes('*')) {
+    return [path.resolve(pattern)]
   }
 
-  const parts = pattern.split("*");
+  const parts = pattern.split('*')
   if (parts.length !== 2) {
     // Only support single * wildcard
-    return [path.resolve(pattern)];
+    return [path.resolve(pattern)]
   }
 
-  const baseDir = path.resolve(parts[0]);
-  const suffix = parts[1];
+  const baseDir = path.resolve(parts[0])
+  const suffix = parts[1]
 
-  if (!fs.existsSync(baseDir)) return [];
+  if (!fs.existsSync(baseDir)) return []
 
-  const entries = fs.readdirSync(baseDir);
+  const entries = fs.readdirSync(baseDir)
   return entries
-    .map((entry) => path.join(baseDir, entry) + suffix)
-    .filter((p) => {
+    .map(entry => path.join(baseDir, entry) + suffix)
+    .filter(p => {
       try {
-        return fs.statSync(p).isDirectory();
+        return fs.statSync(p).isDirectory()
       } catch {
-        return false;
+        return false
       }
     })
-    .sort();
+    .sort()
 }

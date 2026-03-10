@@ -1,161 +1,166 @@
-import fs from "node:fs";
-import os from "node:os";
-import path from "node:path";
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { setupMockProject } from "../helpers.js";
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import {
-  loadConfig,
   defineConfig,
-  getTargetFile,
   getBackupFile,
-} from "../../src/lib/config.js";
+  getTargetFile,
+  loadConfig,
+} from '../../src/lib/config.js'
+import { setupMockProject } from '../helpers.js'
 
-describe("config", () => {
-  describe("loadConfig (memfs)", () => {
-    it("returns defaults when no config file exists", () => {
-      const { fs, dir } = setupMockProject({});
-      const config = loadConfig(dir, fs);
-      expect(config.target).toBe(".env.local");
-      expect(config.exclude).toStrictEqual([]);
-      expect(config.hooks).toStrictEqual({});
-    });
-  });
+describe('config', () => {
+  describe('loadConfig (memfs)', () => {
+    it('returns defaults when no config file exists', () => {
+      const { fs, dir } = setupMockProject({})
+      const config = loadConfig(dir, fs)
+      expect(config.target).toBe('.env.local')
+      expect(config.exclude).toStrictEqual([])
+      expect(config.hooks).toStrictEqual({})
+    })
+  })
 
-  describe("loadConfig (real filesystem)", () => {
-    let tmpDir: string;
+  describe('loadConfig (real filesystem)', () => {
+    let tmpDir: string
 
     function writeFile(name: string, content: string): void {
-      fs.writeFileSync(path.join(tmpDir, name), content, "utf-8");
+      fs.writeFileSync(path.join(tmpDir, name), content, 'utf-8')
     }
 
     beforeEach(() => {
       tmpDir = fs.realpathSync(
-        fs.mkdtempSync(path.join(os.tmpdir(), "dotswitch-config-")),
-      );
-    });
+        fs.mkdtempSync(path.join(os.tmpdir(), 'dotswitch-config-')),
+      )
+    })
 
     afterEach(() => {
-      fs.rmSync(tmpDir, { recursive: true, force: true });
-    });
+      fs.rmSync(tmpDir, { recursive: true, force: true })
+    })
 
-    it("loads dotswitch.config.ts with export default", () => {
+    it('loads dotswitch.config.ts with export default', () => {
       writeFile(
-        "dotswitch.config.ts",
+        'dotswitch.config.ts',
         `
         const config = { target: ".env.from-ts", exclude: [".env.test"] };
         export default config;
         `,
-      );
+      )
 
-      const config = loadConfig(tmpDir);
-      expect(config.target).toBe(".env.from-ts");
-      expect(config.exclude).toStrictEqual([".env.test"]);
-      expect(config.hooks).toStrictEqual({});
-    });
+      const config = loadConfig(tmpDir)
+      expect(config.target).toBe('.env.from-ts')
+      expect(config.exclude).toStrictEqual(['.env.test'])
+      expect(config.hooks).toStrictEqual({})
+    })
 
-    it("loads dotswitch.config.ts with TypeScript syntax", () => {
+    it('loads dotswitch.config.ts with TypeScript syntax', () => {
       writeFile(
-        "dotswitch.config.ts",
+        'dotswitch.config.ts',
         `
         interface Config { target: string; hooks: Record<string, string>; }
         const config: Config = { target: ".env.typed", hooks: { "main": "production" } };
         export default config;
         `,
-      );
+      )
 
-      const config = loadConfig(tmpDir);
-      expect(config.target).toBe(".env.typed");
-      expect(config.hooks).toStrictEqual({ main: "production" });
-    });
+      const config = loadConfig(tmpDir)
+      expect(config.target).toBe('.env.typed')
+      expect(config.hooks).toStrictEqual({ main: 'production' })
+    })
 
-    it("loads dotswitch.config.js (ESM)", () => {
+    it('loads dotswitch.config.js (ESM)', () => {
       writeFile(
-        "dotswitch.config.js",
+        'dotswitch.config.js',
         `export default { target: ".env.from-js" };`,
-      );
+      )
 
-      const config = loadConfig(tmpDir);
-      expect(config.target).toBe(".env.from-js");
-    });
+      const config = loadConfig(tmpDir)
+      expect(config.target).toBe('.env.from-js')
+    })
 
-    it("loads dotswitch.config.mjs", () => {
+    it('loads dotswitch.config.mjs', () => {
       writeFile(
-        "dotswitch.config.mjs",
+        'dotswitch.config.mjs',
         `export default { target: ".env.from-mjs" };`,
-      );
+      )
 
-      const config = loadConfig(tmpDir);
-      expect(config.target).toBe(".env.from-mjs");
-    });
+      const config = loadConfig(tmpDir)
+      expect(config.target).toBe('.env.from-mjs')
+    })
 
-    it("loads dotswitch.config.cjs", () => {
+    it('loads dotswitch.config.cjs', () => {
       writeFile(
-        "dotswitch.config.cjs",
+        'dotswitch.config.cjs',
         `module.exports = { target: ".env.from-cjs", exclude: [".env.dev"] };`,
-      );
+      )
 
-      const config = loadConfig(tmpDir);
-      expect(config.target).toBe(".env.from-cjs");
-      expect(config.exclude).toStrictEqual([".env.dev"]);
-    });
+      const config = loadConfig(tmpDir)
+      expect(config.target).toBe('.env.from-cjs')
+      expect(config.exclude).toStrictEqual(['.env.dev'])
+    })
 
-    it("prefers .ts over .js over .mjs over .cjs", () => {
-      writeFile("dotswitch.config.ts", `export default { target: ".env.ts" };`);
-      writeFile("dotswitch.config.js", `export default { target: ".env.js" };`);
-      writeFile("dotswitch.config.mjs", `export default { target: ".env.mjs" };`);
-      writeFile("dotswitch.config.cjs", `module.exports = { target: ".env.cjs" };`);
-
-      const config = loadConfig(tmpDir);
-      expect(config.target).toBe(".env.ts");
-    });
-
-    it("fills in defaults for partial config", () => {
+    it('prefers .ts over .js over .mjs over .cjs', () => {
+      writeFile('dotswitch.config.ts', `export default { target: ".env.ts" };`)
+      writeFile('dotswitch.config.js', `export default { target: ".env.js" };`)
       writeFile(
-        "dotswitch.config.cjs",
-        `module.exports = { target: ".env" };`,
-      );
+        'dotswitch.config.mjs',
+        `export default { target: ".env.mjs" };`,
+      )
+      writeFile(
+        'dotswitch.config.cjs',
+        `module.exports = { target: ".env.cjs" };`,
+      )
 
-      const config = loadConfig(tmpDir);
-      expect(config.target).toBe(".env");
-      expect(config.exclude).toStrictEqual([]);
-      expect(config.hooks).toStrictEqual({});
-    });
+      const config = loadConfig(tmpDir)
+      expect(config.target).toBe('.env.ts')
+    })
 
-    it("returns defaults when config file has invalid syntax", () => {
-      writeFile("dotswitch.config.js", `export default {{invalid`);
+    it('fills in defaults for partial config', () => {
+      writeFile('dotswitch.config.cjs', `module.exports = { target: ".env" };`)
 
-      const config = loadConfig(tmpDir);
-      expect(config.target).toBe(".env.local");
-    });
+      const config = loadConfig(tmpDir)
+      expect(config.target).toBe('.env')
+      expect(config.exclude).toStrictEqual([])
+      expect(config.hooks).toStrictEqual({})
+    })
 
-    it("returns defaults when no config file exists", () => {
-      const config = loadConfig(tmpDir);
-      expect(config.target).toBe(".env.local");
-      expect(config.exclude).toStrictEqual([]);
-    });
-  });
+    it('returns defaults when config file has invalid syntax', () => {
+      writeFile('dotswitch.config.js', `export default {{invalid`)
 
-  describe("defineConfig", () => {
-    it("returns the config object as-is (identity function)", () => {
-      const input = { target: ".env", exclude: [".env.test"] };
-      expect(defineConfig(input)).toBe(input);
-    });
-  });
+      const config = loadConfig(tmpDir)
+      expect(config.target).toBe('.env.local')
+    })
 
-  describe("getTargetFile", () => {
-    it("returns the target from config", () => {
-      expect(getTargetFile({ target: ".env", exclude: [], hooks: {} })).toBe(".env");
-    });
-  });
+    it('returns defaults when no config file exists', () => {
+      const config = loadConfig(tmpDir)
+      expect(config.target).toBe('.env.local')
+      expect(config.exclude).toStrictEqual([])
+    })
+  })
 
-  describe("getBackupFile", () => {
-    it("appends .backup to target", () => {
-      expect(getBackupFile({ target: ".env.local", exclude: [], hooks: {} })).toBe(
-        ".env.local.backup",
-      );
-      expect(getBackupFile({ target: ".env", exclude: [], hooks: {} })).toBe(
-        ".env.backup",
-      );
-    });
-  });
-});
+  describe('defineConfig', () => {
+    it('returns the config object as-is (identity function)', () => {
+      const input = { target: '.env', exclude: ['.env.test'] }
+      expect(defineConfig(input)).toBe(input)
+    })
+  })
+
+  describe('getTargetFile', () => {
+    it('returns the target from config', () => {
+      expect(getTargetFile({ target: '.env', exclude: [], hooks: {} })).toBe(
+        '.env',
+      )
+    })
+  })
+
+  describe('getBackupFile', () => {
+    it('appends .backup to target', () => {
+      expect(
+        getBackupFile({ target: '.env.local', exclude: [], hooks: {} }),
+      ).toBe('.env.local.backup')
+      expect(getBackupFile({ target: '.env', exclude: [], hooks: {} })).toBe(
+        '.env.backup',
+      )
+    })
+  })
+})

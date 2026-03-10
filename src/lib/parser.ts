@@ -3,24 +3,24 @@
  * Strips comments (lines starting with #) and empty lines.
  */
 export function parseEnvContent(content: string): Map<string, string> {
-  const result = new Map<string, string>();
-  for (const line of content.split("\n")) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
-    const eqIndex = trimmed.indexOf("=");
-    if (eqIndex === -1) continue;
-    const key = trimmed.slice(0, eqIndex).trim();
-    const value = trimmed.slice(eqIndex + 1).trim();
-    if (key) result.set(key, value);
+  const result = new Map<string, string>()
+  for (const line of content.split('\n')) {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith('#')) continue
+    const eqIndex = trimmed.indexOf('=')
+    if (eqIndex === -1) continue
+    const key = trimmed.slice(0, eqIndex).trim()
+    const value = trimmed.slice(eqIndex + 1).trim()
+    if (key) result.set(key, value)
   }
-  return result;
+  return result
 }
 
 export interface EnvDiff {
-  added: string[];
-  removed: string[];
-  changed: string[];
-  unchanged: string[];
+  added: string[]
+  removed: string[]
+  changed: string[]
+  unchanged: string[]
 }
 
 /**
@@ -33,24 +33,24 @@ export function diffEnvMaps(
   from: Map<string, string>,
   to: Map<string, string>,
 ): EnvDiff {
-  const added: string[] = [];
-  const removed: string[] = [];
-  const changed: string[] = [];
-  const unchanged: string[] = [];
+  const added: string[] = []
+  const removed: string[] = []
+  const changed: string[] = []
+  const unchanged: string[] = []
 
   for (const key of from.keys()) {
     if (!to.has(key)) {
-      removed.push(key);
+      removed.push(key)
     } else if (from.get(key) !== to.get(key)) {
-      changed.push(key);
+      changed.push(key)
     } else {
-      unchanged.push(key);
+      unchanged.push(key)
     }
   }
 
   for (const key of to.keys()) {
     if (!from.has(key)) {
-      added.push(key);
+      added.push(key)
     }
   }
 
@@ -59,5 +59,5 @@ export function diffEnvMaps(
     removed: removed.sort(),
     changed: changed.sort(),
     unchanged: unchanged.sort(),
-  };
+  }
 }

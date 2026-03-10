@@ -1,19 +1,19 @@
 export interface EnvFile {
-  name: string;
-  env: string;
-  path: string;
-  active: boolean;
+  name: string
+  env: string
+  path: string
+  active: boolean
 }
 
 export interface UseOptions {
-  force: boolean;
-  backup: boolean;
-  dryRun: boolean;
-  path: string;
-  sourceDir?: string;
+  force: boolean
+  backup: boolean
+  dryRun: boolean
+  path: string
+  sourceDir?: string
 }
 
 export interface CommonOptions {
-  path: string;
-  json: boolean;
+  path: string
+  json: boolean
 }

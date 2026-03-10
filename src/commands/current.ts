@@ -1,30 +1,30 @@
-import { getActiveEnv } from "../lib/env.js";
-import { logger } from "../lib/logger.js";
-import type { CommonOptions } from "../types.js";
+import { getActiveEnv } from '../lib/env.js'
+import { logger } from '../lib/logger.js'
+import type { CommonOptions } from '../types.js'
 
 export function currentCommand(options: CommonOptions): void {
-  const activeEnv = getActiveEnv(options.path);
+  const activeEnv = getActiveEnv(options.path)
 
   if (options.json) {
-    console.log(JSON.stringify({ active: activeEnv ?? null }));
+    console.log(JSON.stringify({ active: activeEnv ?? null }))
     if (!activeEnv) {
-      process.exitCode = 1;
+      process.exitCode = 1
     }
-    return;
+    return
   }
 
-  const isTTY = process.stdout.isTTY;
+  const isTTY = process.stdout.isTTY
 
   if (activeEnv) {
     if (isTTY) {
-      logger.info(`Active environment: ${activeEnv}`);
+      logger.info(`Active environment: ${activeEnv}`)
     } else {
-      console.log(activeEnv);
+      console.log(activeEnv)
     }
   } else {
     if (isTTY) {
-      logger.warn("No active environment detected");
+      logger.warn('No active environment detected')
     }
-    process.exitCode = 1;
+    process.exitCode = 1
   }
 }

@@ -1,16 +1,16 @@
-import pc from "picocolors";
+import pc from 'picocolors'
 
 export const logger = {
   success(message: string): void {
-    console.log(pc.green(`✓ ${message}`));
+    console.log(pc.green(`✓ ${message}`))
   },
   info(message: string): void {
-    console.log(pc.cyan(message));
+    console.log(pc.cyan(message))
   },
   warn(message: string): void {
-    console.error(pc.yellow(`⚠ ${message}`));
+    console.error(pc.yellow(`⚠ ${message}`))
   },
   error(message: string): void {
-    console.error(pc.red(`✗ ${message}`));
+    console.error(pc.red(`✗ ${message}`))
   },
-};
+}
