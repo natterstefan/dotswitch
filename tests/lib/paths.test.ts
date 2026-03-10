@@ -22,7 +22,7 @@ describe("resolvePaths", () => {
 
   it("returns single resolved path for non-glob", () => {
     const result = resolvePaths("/some/path");
-    expect(result).toEqual(["/some/path"]);
+    expect(result).toStrictEqual(["/some/path"]);
   });
 
   it("resolves glob pattern to matching directories", () => {
@@ -36,7 +36,7 @@ describe("resolvePaths", () => {
 
   it("returns empty array for non-existent base dir", () => {
     const result = resolvePaths("/nonexistent/path/*");
-    expect(result).toEqual([]);
+    expect(result).toStrictEqual([]);
   });
 
   it("filters to directories only", () => {

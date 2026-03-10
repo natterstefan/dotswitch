@@ -68,7 +68,7 @@ describe("lsCommand", () => {
     lsCommand({ path: "/p", json: true });
 
     const output = JSON.parse(consoleSpy.mock.calls[0][0] as string);
-    expect(output).toEqual([
+    expect(output).toStrictEqual([
       { name: ".env.staging", env: "staging", active: true },
       { name: ".env.production", env: "production", active: false },
     ]);
@@ -81,7 +81,7 @@ describe("lsCommand", () => {
     lsCommand({ path: "/p", json: true });
 
     const output = JSON.parse(consoleSpy.mock.calls[0][0] as string);
-    expect(output).toEqual([]);
+    expect(output).toStrictEqual([]);
     expect(process.exitCode).toBe(1);
   });
 });
