@@ -47,7 +47,8 @@ async function useSinglePath(
   }
 
   if (options.dryRun) {
-    logger.info(`${prefix}Would switch to ${env}`);
+    const from = sourceDir ? ` (from ${sourceDir})` : "";
+    logger.info(`${prefix}Would switch to ${env}${from}`);
     if (options.backup) {
       logger.info(`${prefix}Would back up .env.local to .env.local.backup`);
     }
@@ -56,7 +57,8 @@ async function useSinglePath(
 
   try {
     switchEnv(dir, env, { backup: options.backup, sourceDir });
-    logger.success(`${prefix}Switched to ${env}`);
+    const from = sourceDir ? ` (from ${sourceDir})` : "";
+    logger.success(`${prefix}Switched to ${env}${from}`);
   } catch (error) {
     logger.error(
       `${prefix}${error instanceof Error ? error.message : "Failed to switch environment"}`,
