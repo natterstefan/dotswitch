@@ -11,7 +11,8 @@ async function useSinglePath(
   showPrefix: boolean,
 ): Promise<void> {
   const prefix = showPrefix ? `[${dir}] ` : "";
-  const files = listEnvFiles(dir);
+  const sourceDir = options.sourceDir;
+  const files = listEnvFiles(sourceDir ?? dir);
 
   if (files.length === 0) {
     logger.error(`${prefix}No .env.* files found`);
@@ -54,7 +55,7 @@ async function useSinglePath(
   }
 
   try {
-    switchEnv(dir, env, { backup: options.backup });
+    switchEnv(dir, env, { backup: options.backup, sourceDir });
     logger.success(`${prefix}Switched to ${env}`);
   } catch (error) {
     logger.error(

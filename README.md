@@ -118,6 +118,12 @@ All commands support:
 | `-p, --path <dir>` | Project directory (defaults to cwd) |
 | `--json` | Output as JSON (machine-readable) |
 
+`ls` and `use` also support:
+
+| Flag | Description |
+|------|-------------|
+| `-r, --root` | Source env files from the main repo root (worktree) |
+
 `use` also supports:
 
 | Flag | Description |
@@ -237,6 +243,26 @@ monorepo globs also work from worktrees:
 ```bash
 dotswitch use staging --path "./apps/*"
 ```
+
+### Using main repo envs in a worktree
+
+When a worktree has its own `.env.*` files, dotswitch operates
+locally by default. Use `--root` / `-r` to source env files
+from the main repo instead:
+
+```bash
+cd /path/to/my-worktree
+
+# List envs from the main repo (even if the worktree has local ones)
+dotswitch ls --root
+
+# Copy .env.staging from the main repo into the worktree as .env.local
+dotswitch use staging --root
+```
+
+This is useful when you want to quickly pull an environment
+configuration from the main repo into your worktree without
+copying files manually.
 
 ## How it works
 

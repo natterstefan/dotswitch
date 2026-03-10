@@ -34,10 +34,15 @@ function hasEnvFiles(dir: string): boolean {
  *   otherwise resolve to the main repo root.
  * - Explicit --path: rebase it relative to the main repo when in a worktree,
  *   so glob patterns like "./apps/*" expand against the main repo.
+ * - --root: always resolve to the main repo root, ignoring local worktree env files.
  */
-function resolveCommandPath(explicitPath: string | undefined): string {
+function resolveCommandPath(explicitPath: string | undefined, root?: boolean): string {
   const cwd = process.cwd();
   const projectRoot = resolveProjectRoot(cwd);
+
+  if (root) {
+    return projectRoot;
+  }
 
   if (!explicitPath) {
     if (projectRoot !== cwd && hasEnvFiles(cwd)) {
@@ -55,6 +60,18 @@ function resolveCommandPath(explicitPath: string | undefined): string {
   return path.resolve(projectRoot, relative);
 }
 
+/**
+ * When --root is used from a worktree, return the main repo root as the
+ * source directory for env files. Returns undefined when not applicable.
+ */
+function resolveSourceDir(root?: boolean): string | undefined {
+  if (!root) return undefined;
+  const cwd = process.cwd();
+  const projectRoot = resolveProjectRoot(cwd);
+  // Only meaningful when cwd differs from projectRoot (i.e. in a worktree)
+  return projectRoot !== cwd ? projectRoot : undefined;
+}
+
 const program = new Command();
 
 program
@@ -69,18 +86,21 @@ program
   .option("--no-backup", "skip .env.local backup")
   .option("-n, --dry-run", "show what would happen without making changes", false)
   .option("-p, --path <dir>", "project directory")
+  .option("-r, --root", "source env files from the main repo root (worktree)")
   .option("--hook-branch <branch>", "internal: auto-switch by branch name")
   .action(async (env: string | undefined, opts) => {
-    const projectPath = resolveCommandPath(opts.path);
+    const projectPath = resolveCommandPath(opts.path, opts.root);
     if (opts.hookBranch) {
       hookBranchCommand(opts.hookBranch, { path: projectPath });
       return;
     }
+    const sourceDir = resolveSourceDir(opts.root);
     await useCommand(env, {
       force: opts.force,
       backup: opts.backup,
       dryRun: opts.dryRun,
-      path: projectPath,
+      path: sourceDir ? process.cwd() : projectPath,
+      sourceDir,
     });
   });
 
@@ -88,9 +108,10 @@ program
   .command("ls")
   .description("List available .env.* files")
   .option("-p, --path <dir>", "project directory")
+  .option("-r, --root", "list env files from the main repo root (worktree)")
   .option("--json", "output as JSON", false)
   .action((opts) => {
-    lsCommand({ path: resolveCommandPath(opts.path), json: opts.json });
+    lsCommand({ path: resolveCommandPath(opts.path, opts.root), json: opts.json });
   });
 
 program
