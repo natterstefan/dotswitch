@@ -191,10 +191,6 @@ dotswitch searches for config files in this order (first match wins):
 2. `dotswitch.config.js`
 3. `dotswitch.config.mjs`
 4. `dotswitch.config.cjs`
-5. `.dotswitchrc.json` (deprecated)
-
-> **Note:** `.dotswitchrc.json` still works but is deprecated and
-> will show a warning. Migrate to one of the JS/TS formats above.
 
 ### Options
 

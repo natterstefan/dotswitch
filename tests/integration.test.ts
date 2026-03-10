@@ -144,11 +144,11 @@ describe("integration: real filesystem", () => {
   });
 
   describe("config file loading", () => {
-    it("loads config from .dotswitchrc.json on real filesystem", () => {
-      writeFile(".dotswitchrc.json", JSON.stringify({
+    it("loads config from dotswitch.config.cjs on real filesystem", () => {
+      writeFile("dotswitch.config.cjs", `module.exports = {
         target: ".env",
         exclude: [".env.test"],
-      }));
+      };`);
 
       const config = loadConfig(tmpDir);
       expect(config.target).toBe(".env");
@@ -178,7 +178,7 @@ describe("integration: real filesystem", () => {
 
   describe("custom target via config", () => {
     it("switches to .env instead of .env.local when configured", () => {
-      writeFile(".dotswitchrc.json", JSON.stringify({ target: ".env" }));
+      writeFile("dotswitch.config.cjs", `module.exports = { target: ".env" };`);
       writeFile(".env.staging", "API=staging");
 
       const config = loadConfig(tmpDir);
@@ -212,8 +212,8 @@ describe("integration: real filesystem", () => {
         "API=https://api.example.com\n",
       );
       fs.writeFileSync(
-        path.join(mainRepoDir, ".dotswitchrc.json"),
-        JSON.stringify({ hooks: { main: "production" } }),
+        path.join(mainRepoDir, "dotswitch.config.cjs"),
+        `module.exports = { hooks: { main: "production" } };`,
       );
 
       // Create a real worktree

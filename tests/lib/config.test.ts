@@ -11,7 +11,7 @@ import {
 } from "../../src/lib/config.js";
 
 describe("config", () => {
-  describe("loadConfig (memfs — JSON only)", () => {
+  describe("loadConfig (memfs)", () => {
     it("returns defaults when no config file exists", () => {
       const { fs, dir } = setupMockProject({});
       const config = loadConfig(dir, fs);
@@ -19,44 +19,9 @@ describe("config", () => {
       expect(config.exclude).toStrictEqual([]);
       expect(config.hooks).toStrictEqual({});
     });
-
-    it("loads config from .dotswitchrc.json", () => {
-      const { fs, dir } = setupMockProject({
-        ".dotswitchrc.json": JSON.stringify({
-          target: ".env",
-          exclude: [".env.test"],
-          hooks: { "staging/*": "staging" },
-        }),
-      });
-
-      const config = loadConfig(dir, fs);
-      expect(config.target).toBe(".env");
-      expect(config.exclude).toStrictEqual([".env.test"]);
-      expect(config.hooks).toStrictEqual({ "staging/*": "staging" });
-    });
-
-    it("fills in defaults for missing fields", () => {
-      const { fs, dir } = setupMockProject({
-        ".dotswitchrc.json": JSON.stringify({ target: ".env" }),
-      });
-
-      const config = loadConfig(dir, fs);
-      expect(config.target).toBe(".env");
-      expect(config.exclude).toStrictEqual([]);
-      expect(config.hooks).toStrictEqual({});
-    });
-
-    it("returns defaults for invalid JSON", () => {
-      const { fs, dir } = setupMockProject({
-        ".dotswitchrc.json": "not valid json{{{",
-      });
-
-      const config = loadConfig(dir, fs);
-      expect(config.target).toBe(".env.local");
-    });
   });
 
-  describe("loadConfig (real filesystem — JS/TS configs)", () => {
+  describe("loadConfig (real filesystem)", () => {
     let tmpDir: string;
 
     function writeFile(name: string, content: string): void {
@@ -144,22 +109,7 @@ describe("config", () => {
       expect(config.target).toBe(".env.ts");
     });
 
-    it("prefers JS/TS config over .dotswitchrc.json", () => {
-      writeFile("dotswitch.config.cjs", `module.exports = { target: ".env.cjs" };`);
-      writeFile(".dotswitchrc.json", JSON.stringify({ target: ".env.json" }));
-
-      const config = loadConfig(tmpDir);
-      expect(config.target).toBe(".env.cjs");
-    });
-
-    it("falls back to .dotswitchrc.json when no JS/TS config exists", () => {
-      writeFile(".dotswitchrc.json", JSON.stringify({ target: ".env.legacy" }));
-
-      const config = loadConfig(tmpDir);
-      expect(config.target).toBe(".env.legacy");
-    });
-
-    it("fills in defaults for partial JS config", () => {
+    it("fills in defaults for partial config", () => {
       writeFile(
         "dotswitch.config.cjs",
         `module.exports = { target: ".env" };`,
@@ -176,6 +126,12 @@ describe("config", () => {
 
       const config = loadConfig(tmpDir);
       expect(config.target).toBe(".env.local");
+    });
+
+    it("returns defaults when no config file exists", () => {
+      const config = loadConfig(tmpDir);
+      expect(config.target).toBe(".env.local");
+      expect(config.exclude).toStrictEqual([]);
     });
   });
 

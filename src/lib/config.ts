@@ -1,7 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
 import { createJiti } from "jiti";
-import { logger } from "./logger.js";
 
 /**
  * Config file search order (first match wins):
@@ -9,7 +8,6 @@ import { logger } from "./logger.js";
  * 2. dotswitch.config.js
  * 3. dotswitch.config.mjs
  * 4. dotswitch.config.cjs
- * 5. .dotswitchrc.json (deprecated)
  */
 const CONFIG_FILES = [
   "dotswitch.config.ts",
@@ -17,8 +15,6 @@ const CONFIG_FILES = [
   "dotswitch.config.mjs",
   "dotswitch.config.cjs",
 ] as const;
-
-const LEGACY_CONFIG = ".dotswitchrc.json";
 
 export interface DotswitchConfig {
   /** Target file to write to (default: ".env.local") */
@@ -79,30 +75,10 @@ function loadJsConfig(
   }
 }
 
-function loadJsonConfig(
-  configPath: string,
-  fsModule: typeof fs,
-): Partial<DotswitchConfig> | undefined {
-  try {
-    if (fsModule.existsSync(configPath)) {
-      logger.warn(
-        `.dotswitchrc.json is deprecated. Migrate to dotswitch.config.ts (or .js/.mjs/.cjs).`,
-      );
-      return JSON.parse(
-        fsModule.readFileSync(configPath, "utf-8"),
-      ) as Partial<DotswitchConfig>;
-    }
-  } catch {
-    // Invalid config — fall through
-  }
-  return undefined;
-}
-
 export function loadConfig(
   dir: string,
   fsModule: typeof fs = fs,
 ): DotswitchConfig {
-  // 1. Search for JS/TS config files (first match wins)
   for (const filename of CONFIG_FILES) {
     const configPath = path.join(dir, filename);
     if (fsModule.existsSync(configPath)) {
@@ -111,13 +87,6 @@ export function loadConfig(
         return mergeWithDefaults(raw);
       }
     }
-  }
-
-  // 2. Fall back to legacy .dotswitchrc.json (deprecated)
-  const legacyPath = path.join(dir, LEGACY_CONFIG);
-  const raw = loadJsonConfig(legacyPath, fsModule);
-  if (raw) {
-    return mergeWithDefaults(raw);
   }
 
   return { ...DEFAULT_CONFIG };
