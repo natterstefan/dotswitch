@@ -110,12 +110,13 @@ export function restoreEnvLocal(
 export function switchEnv(
   dir: string,
   env: string,
-  options: { backup: boolean } = { backup: true },
+  options: { backup: boolean; sourceDir?: string } = { backup: true },
   fsModule: typeof fs = fs,
   config?: DotswitchConfig,
 ): void {
   const cfg = resolveConfig(dir, config, fsModule);
-  const sourcePath = path.join(dir, `.env.${env}`);
+  const srcDir = options.sourceDir ?? dir;
+  const sourcePath = path.join(srcDir, `.env.${env}`);
   const targetPath = path.join(dir, getTargetFile(cfg));
 
   if (!fsModule.existsSync(sourcePath)) {

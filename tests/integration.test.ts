@@ -324,6 +324,78 @@ describe("integration: real filesystem", () => {
       ).toBe(false);
     });
 
+    it("switchEnv with sourceDir reads from main repo, writes to worktree", () => {
+      // Worktree has its own (different) env files
+      fs.writeFileSync(
+        path.join(worktreeDir, ".env.staging"),
+        "API=https://wt-staging.example.com\n",
+      );
+
+      // Switch in worktree using main repo as source
+      switchEnv(worktreeDir, "staging", {
+        backup: false,
+        sourceDir: mainRepoDir,
+      });
+
+      // .env.local should be written in the worktree
+      const wtContent = fs.readFileSync(
+        path.join(worktreeDir, ".env.local"),
+        "utf-8",
+      );
+      expect(wtContent).toContain("# dotswitch:staging");
+      // Content should come from the main repo, not the worktree copy
+      expect(wtContent).toContain("API=https://staging.example.com");
+
+      // Main repo should NOT have a .env.local
+      expect(
+        fs.existsSync(path.join(mainRepoDir, ".env.local")),
+      ).toBe(false);
+    });
+
+    it("switchEnv with sourceDir backs up existing target in worktree", () => {
+      // Existing .env.local in worktree
+      fs.writeFileSync(
+        path.join(worktreeDir, ".env.local"),
+        "API=https://old.example.com\n",
+      );
+
+      switchEnv(worktreeDir, "production", {
+        backup: true,
+        sourceDir: mainRepoDir,
+      });
+
+      // Backup should exist in the worktree
+      expect(
+        fs.existsSync(path.join(worktreeDir, ".env.local.backup")),
+      ).toBe(true);
+      const backup = fs.readFileSync(
+        path.join(worktreeDir, ".env.local.backup"),
+        "utf-8",
+      );
+      expect(backup).toBe("API=https://old.example.com\n");
+
+      // Switched content comes from main repo
+      const content = fs.readFileSync(
+        path.join(worktreeDir, ".env.local"),
+        "utf-8",
+      );
+      expect(content).toContain("API=https://api.example.com");
+    });
+
+    it("listEnvFiles from main repo shows main repo envs regardless of worktree files", () => {
+      // Worktree has a different set of env files
+      fs.writeFileSync(
+        path.join(worktreeDir, ".env.local-only"),
+        "LOCAL=true\n",
+      );
+
+      const mainFiles = listEnvFiles(mainRepoDir);
+      expect(mainFiles.map((f) => f.env).sort()).toEqual(["production", "staging"]);
+
+      const wtFiles = listEnvFiles(worktreeDir);
+      expect(wtFiles.map((f) => f.env)).toEqual(["local-only"]);
+    });
+
     it("rebases explicit --path from worktree to main repo", () => {
       // Simulate what cli.ts resolveCommandPath does for an explicit --path
       // when cwd is the worktree root

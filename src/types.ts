@@ -10,6 +10,7 @@ export interface UseOptions {
   backup: boolean;
   dryRun: boolean;
   path: string;
+  sourceDir?: string;
 }
 
 export interface CommonOptions {

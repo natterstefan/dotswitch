@@ -11,7 +11,8 @@ async function useSinglePath(
   showPrefix: boolean,
 ): Promise<void> {
   const prefix = showPrefix ? `[${dir}] ` : "";
-  const files = listEnvFiles(dir);
+  const sourceDir = options.sourceDir;
+  const files = listEnvFiles(sourceDir ?? dir);
 
   if (files.length === 0) {
     logger.error(`${prefix}No .env.* files found`);
@@ -46,7 +47,8 @@ async function useSinglePath(
   }
 
   if (options.dryRun) {
-    logger.info(`${prefix}Would switch to ${env}`);
+    const from = sourceDir ? ` (from ${sourceDir})` : "";
+    logger.info(`${prefix}Would switch to ${env}${from}`);
     if (options.backup) {
       logger.info(`${prefix}Would back up .env.local to .env.local.backup`);
     }
@@ -54,8 +56,9 @@ async function useSinglePath(
   }
 
   try {
-    switchEnv(dir, env, { backup: options.backup });
-    logger.success(`${prefix}Switched to ${env}`);
+    switchEnv(dir, env, { backup: options.backup, sourceDir });
+    const from = sourceDir ? ` (from ${sourceDir})` : "";
+    logger.success(`${prefix}Switched to ${env}${from}`);
   } catch (error) {
     logger.error(
       `${prefix}${error instanceof Error ? error.message : "Failed to switch environment"}`,
