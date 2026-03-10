@@ -60,7 +60,7 @@ describe("integration: real filesystem", () => {
       // List available envs
       const files = listEnvFiles(tmpDir);
       expect(files).toHaveLength(2);
-      expect(files.map((f) => f.env).sort()).toEqual(["production", "staging"]);
+      expect(files.map((f) => f.env).sort()).toStrictEqual(["production", "staging"]);
 
       // No active env yet (no tracker header)
       expect(getActiveEnv(tmpDir)).toBeNull();
@@ -136,10 +136,10 @@ describe("integration: real filesystem", () => {
       const toMap = parseEnvContent(production);
       const diff = diffEnvMaps(fromMap, toMap);
 
-      expect(diff.added).toEqual(["NEW_KEY"]);
-      expect(diff.removed).toEqual(["DEBUG"]);
-      expect(diff.changed).toEqual(["API"]);
-      expect(diff.unchanged).toEqual(["SHARED"]);
+      expect(diff.added).toStrictEqual(["NEW_KEY"]);
+      expect(diff.removed).toStrictEqual(["DEBUG"]);
+      expect(diff.changed).toStrictEqual(["API"]);
+      expect(diff.unchanged).toStrictEqual(["SHARED"]);
     });
   });
 
@@ -152,13 +152,13 @@ describe("integration: real filesystem", () => {
 
       const config = loadConfig(tmpDir);
       expect(config.target).toBe(".env");
-      expect(config.exclude).toEqual([".env.test"]);
+      expect(config.exclude).toStrictEqual([".env.test"]);
     });
 
     it("returns defaults when config file does not exist", () => {
       const config = loadConfig(tmpDir);
       expect(config.target).toBe(".env.local");
-      expect(config.exclude).toEqual([]);
+      expect(config.exclude).toStrictEqual([]);
     });
   });
 
@@ -232,7 +232,7 @@ describe("integration: real filesystem", () => {
       const projectRoot = resolveProjectRoot(worktreeDir);
       const files = listEnvFiles(projectRoot);
 
-      expect(files.map((f) => f.env).sort()).toEqual(["production", "staging"]);
+      expect(files.map((f) => f.env).sort()).toStrictEqual(["production", "staging"]);
     });
 
     it("switches env in main repo from worktree", () => {
@@ -260,7 +260,7 @@ describe("integration: real filesystem", () => {
       const projectRoot = resolveProjectRoot(worktreeDir);
       const config = loadConfig(projectRoot);
 
-      expect(config.hooks).toEqual({ main: "production" });
+      expect(config.hooks).toStrictEqual({ main: "production" });
     });
 
     it("installs hook in shared .git/hooks from worktree", () => {
@@ -306,7 +306,7 @@ describe("integration: real filesystem", () => {
 
       // But listEnvFiles on the worktree dir finds the local files
       const files = listEnvFiles(worktreeDir);
-      expect(files.map((f) => f.env).sort()).toEqual(["production", "staging"]);
+      expect(files.map((f) => f.env).sort()).toStrictEqual(["production", "staging"]);
 
       // switchEnv writes .env.local in the worktree, not the main repo
       switchEnv(worktreeDir, "staging", { backup: false });
@@ -390,10 +390,10 @@ describe("integration: real filesystem", () => {
       );
 
       const mainFiles = listEnvFiles(mainRepoDir);
-      expect(mainFiles.map((f) => f.env).sort()).toEqual(["production", "staging"]);
+      expect(mainFiles.map((f) => f.env).sort()).toStrictEqual(["production", "staging"]);
 
       const wtFiles = listEnvFiles(worktreeDir);
-      expect(wtFiles.map((f) => f.env)).toEqual(["local-only"]);
+      expect(wtFiles.map((f) => f.env)).toStrictEqual(["local-only"]);
     });
 
     it("rebases explicit --path from worktree to main repo", () => {

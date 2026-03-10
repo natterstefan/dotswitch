@@ -8,9 +8,9 @@ export function hookInstallCommand(options: { path: string }): void {
     const config = loadConfig(options.path);
     if (Object.keys(config.hooks).length === 0) {
       logger.warn(
-        'No hook mappings defined. Add "hooks" to .dotswitchrc.json first.',
+        'No hook mappings defined. Add "hooks" to your dotswitch config first.',
       );
-      logger.info('Example: { "hooks": { "staging/*": "staging" } }');
+      logger.info('Example: export default { hooks: { "staging/*": "staging" } }');
       process.exitCode = 1;
       return;
     }
