@@ -12,7 +12,15 @@ import {
 function git(cwd: string, ...args: string[]): string {
   return execFileSync(
     'git',
-    ['-c', 'user.name=test', '-c', 'user.email=test@test.com', ...args],
+    [
+      '-c',
+      'user.name=test',
+      '-c',
+      'user.email=test@test.com',
+      '-c',
+      'init.defaultBranch=main',
+      ...args,
+    ],
     {
       cwd,
       encoding: 'utf-8',
