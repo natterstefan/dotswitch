@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.0](https://github.com/natterstefan/dotswitch/compare/v1.1.1...v1.2.0) (2026-03-10)
+
+
+### Features
+
+* add --root flag for worktree env sourcing ([#5](https://github.com/natterstefan/dotswitch/issues/5)) ([70fac37](https://github.com/natterstefan/dotswitch/commit/70fac37477346885ec4e1b29dbf22e71e49590a3))
+* support dotswitch.config.ts/js/mjs/cjs config files ([#7](https://github.com/natterstefan/dotswitch/issues/7)) ([8f3b2f4](https://github.com/natterstefan/dotswitch/commit/8f3b2f43109ff66e0d64d197ed540698501b1f08))
+
 ## [1.1.1](https://github.com/natterstefan/dotswitch/compare/v1.1.0...v1.1.1) (2026-03-01)
 
 
