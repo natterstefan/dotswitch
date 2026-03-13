@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { resolveCommonGitDir } from './git.js'
+import { logger } from './logger.js'
 
 const HOOK_FILENAME = 'post-checkout'
 
@@ -34,6 +35,7 @@ export function installHook(dir: string): { created: boolean; path: string } {
   }
 
   const hookPath = path.join(hooksDir, HOOK_FILENAME)
+  logger.debug(`hook: install target=${hookPath}`)
   const hookScript = getHookScript()
 
   if (fs.existsSync(hookPath)) {
@@ -65,6 +67,7 @@ export function removeHook(dir: string): boolean {
   }
 
   const hookPath = path.join(hooksDir, HOOK_FILENAME)
+  logger.debug(`hook: remove target=${hookPath}`)
   if (!fs.existsSync(hookPath)) return false
 
   const content = fs.readFileSync(hookPath, 'utf-8')
@@ -93,19 +96,33 @@ export function matchBranchToEnv(
   branch: string,
   hooks: Record<string, string>,
 ): string | null {
+  logger.debug(
+    `hook: matching branch "${branch}" against ${Object.keys(hooks).length} pattern(s)`,
+  )
+
   // Exact match first
-  if (hooks[branch]) return hooks[branch]
+  if (hooks[branch]) {
+    logger.debug(`hook: exact match "${branch}" -> "${hooks[branch]}"`)
+    return hooks[branch]
+  }
 
   // Glob pattern match
   for (const [pattern, env] of Object.entries(hooks)) {
     if (pattern.endsWith('/*')) {
       const prefix = pattern.slice(0, -2)
-      if (branch.startsWith(`${prefix}/`)) return env
+      if (branch.startsWith(`${prefix}/`)) {
+        logger.debug(`hook: glob match "${pattern}" -> "${env}"`)
+        return env
+      }
     } else if (pattern.endsWith('*')) {
       const prefix = pattern.slice(0, -1)
-      if (branch.startsWith(prefix)) return env
+      if (branch.startsWith(prefix)) {
+        logger.debug(`hook: glob match "${pattern}" -> "${env}"`)
+        return env
+      }
     }
   }
 
+  logger.debug('hook: no matching pattern found')
   return null
 }
