@@ -47,25 +47,35 @@ function resolveCommandPath(
 ): string {
   const cwd = process.cwd()
   const projectRoot = resolveProjectRoot(cwd)
+  logger.debug(`path: cwd=${cwd}`)
+  logger.debug(`path: project root=${projectRoot}`)
 
   if (root) {
+    logger.debug('path: --root flag set, using project root')
     return projectRoot
   }
 
   if (!explicitPath) {
     if (projectRoot !== cwd && hasEnvFiles(cwd)) {
+      logger.debug('path: worktree with local env files, using cwd')
       return cwd
     }
+    logger.debug(`path: resolved to ${projectRoot}`)
     return projectRoot
   }
 
   // Not in a worktree — use the explicit path as-is
-  if (projectRoot === cwd) return explicitPath
+  if (projectRoot === cwd) {
+    logger.debug(`path: explicit path=${explicitPath}`)
+    return explicitPath
+  }
 
   // Worktree: rebase the explicit path relative to the main repo
   const absolute = path.resolve(explicitPath)
   const relative = path.relative(cwd, absolute)
-  return path.resolve(projectRoot, relative)
+  const rebased = path.resolve(projectRoot, relative)
+  logger.debug(`path: worktree rebase ${explicitPath} -> ${rebased}`)
+  return rebased
 }
 
 /**
