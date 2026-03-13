@@ -14,6 +14,7 @@ import { restoreCommand } from './commands/restore.js'
 import { useCommand } from './commands/use.js'
 import { EXCLUDED_ENV_FILES } from './lib/constants.js'
 import { resolveProjectRoot } from './lib/git.js'
+import { logger } from './lib/logger.js'
 
 const require = createRequire(import.meta.url)
 const pkg = require('../package.json') as { version: string }
@@ -85,6 +86,15 @@ program
   .name('dotswitch')
   .description('Quickly switch between .env files')
   .version(pkg.version)
+
+program.option('-v, --verbose', 'enable debug output')
+
+program.hook('preAction', () => {
+  const opts = program.opts<{ verbose?: boolean }>()
+  if (opts.verbose) {
+    logger.setVerbose(true)
+  }
+})
 
 program
   .command('use [env]')
