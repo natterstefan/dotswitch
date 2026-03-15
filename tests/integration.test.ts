@@ -4,6 +4,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { loadConfig } from '../src/lib/config.js'
+import { copyFiles } from '../src/lib/copy.js'
 import {
   backupEnvLocal,
   getActiveEnv,
@@ -13,7 +14,6 @@ import {
 } from '../src/lib/env.js'
 import { resolveProjectRoot } from '../src/lib/git.js'
 import { installHook } from '../src/lib/hooks.js'
-import { copyFiles } from '../src/lib/copy.js'
 import { diffEnvMaps, parseEnvContent } from '../src/lib/parser.js'
 
 function git(cwd: string, ...args: string[]): string {
@@ -548,8 +548,12 @@ describe('integration: real filesystem', () => {
 
         expect(results).toHaveLength(2)
         expect(results.every(r => r.status === 'copied')).toBe(true)
-        expect(fs.existsSync(path.join(worktreeDir, '.env.test.local'))).toBe(true)
-        expect(fs.existsSync(path.join(worktreeDir, '.env.cypress.local'))).toBe(true)
+        expect(fs.existsSync(path.join(worktreeDir, '.env.test.local'))).toBe(
+          true,
+        )
+        expect(
+          fs.existsSync(path.join(worktreeDir, '.env.cypress.local')),
+        ).toBe(true)
       })
     })
   })

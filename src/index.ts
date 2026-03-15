@@ -5,6 +5,8 @@ export {
   getTargetFile,
   loadConfig,
 } from './lib/config.js'
+export type { CopyResult } from './lib/copy.js'
+export { copyFiles } from './lib/copy.js'
 export {
   backupEnvLocal,
   getActiveEnv,
@@ -21,6 +23,9 @@ export {
   parseTrackerHeader,
   removeTrackerHeader,
 } from './lib/tracker.js'
-export type { CopyResult } from './lib/copy.js'
-export { copyFiles } from './lib/copy.js'
-export type { CommonOptions, CopyOptions, EnvFile, UseOptions } from './types.js'
+export type {
+  CommonOptions,
+  CopyOptions,
+  EnvFile,
+  UseOptions,
+} from './types.js'

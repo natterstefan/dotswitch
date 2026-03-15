@@ -62,9 +62,7 @@ describe('copyCommand', () => {
     })
 
     expect(process.exitCode).toBe(1)
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining('worktree'),
-    )
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('worktree'))
     expect(mockedCopyFiles).not.toHaveBeenCalled()
   })
 
@@ -73,7 +71,9 @@ describe('copyCommand', () => {
     mockedCopyFiles.mockReturnValue([
       { file: '.env.test.local', status: 'skipped' },
     ])
-    const consoleWarnSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const consoleWarnSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {})
 
     copyCommand(['.env.test.local'], {
       force: false,

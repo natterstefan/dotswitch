@@ -1,18 +1,18 @@
-import { defineConfig } from "tsdown";
+import { defineConfig } from 'tsdown'
 
 export default defineConfig([
   {
-    entry: ["src/cli.ts"],
-    format: ["esm"],
-    banner: { js: "#!/usr/bin/env node" },
-    outDir: "dist",
+    entry: ['src/cli.ts'],
+    format: ['esm'],
+    banner: { js: '#!/usr/bin/env node' },
+    outDir: 'dist',
     clean: true,
   },
   {
-    entry: ["src/index.ts"],
-    format: ["esm", "cjs"],
+    entry: ['src/index.ts'],
+    format: ['esm', 'cjs'],
     dts: true,
-    outDir: "dist",
+    outDir: 'dist',
     clean: false,
   },
-]);
+])

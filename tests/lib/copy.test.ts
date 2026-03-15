@@ -9,15 +9,23 @@ describe('copyFiles', () => {
     fs.mkdirSync('/source', { recursive: true })
     fs.writeFileSync('/source/.env.test.local', 'TEST=true')
 
-    const results = copyFiles(['.env.test.local'], '/source', '/project', {
-      force: false,
-      dryRun: false,
-    }, fs)
+    const results = copyFiles(
+      ['.env.test.local'],
+      '/source',
+      '/project',
+      {
+        force: false,
+        dryRun: false,
+      },
+      fs,
+    )
 
     expect(results).toStrictEqual([
       { file: '.env.test.local', status: 'copied' },
     ])
-    expect(fs.readFileSync('/project/.env.test.local', 'utf-8')).toBe('TEST=true')
+    expect(fs.readFileSync('/project/.env.test.local', 'utf-8')).toBe(
+      'TEST=true',
+    )
   })
 
   it('copies multiple files', () => {
@@ -47,16 +55,24 @@ describe('copyFiles', () => {
     fs.mkdirSync('/source', { recursive: true })
     fs.writeFileSync('/source/.env.test.local', 'NEW=true')
 
-    const results = copyFiles(['.env.test.local'], '/source', '/project', {
-      force: false,
-      dryRun: false,
-    }, fs)
+    const results = copyFiles(
+      ['.env.test.local'],
+      '/source',
+      '/project',
+      {
+        force: false,
+        dryRun: false,
+      },
+      fs,
+    )
 
     expect(results).toStrictEqual([
       { file: '.env.test.local', status: 'skipped' },
     ])
     // Original content preserved
-    expect(fs.readFileSync('/project/.env.test.local', 'utf-8')).toBe('EXISTING=true')
+    expect(fs.readFileSync('/project/.env.test.local', 'utf-8')).toBe(
+      'EXISTING=true',
+    )
   })
 
   it('overwrites files that already exist with --force', () => {
@@ -66,25 +82,39 @@ describe('copyFiles', () => {
     fs.mkdirSync('/source', { recursive: true })
     fs.writeFileSync('/source/.env.test.local', 'NEW=true')
 
-    const results = copyFiles(['.env.test.local'], '/source', '/project', {
-      force: true,
-      dryRun: false,
-    }, fs)
+    const results = copyFiles(
+      ['.env.test.local'],
+      '/source',
+      '/project',
+      {
+        force: true,
+        dryRun: false,
+      },
+      fs,
+    )
 
     expect(results).toStrictEqual([
       { file: '.env.test.local', status: 'copied' },
     ])
-    expect(fs.readFileSync('/project/.env.test.local', 'utf-8')).toBe('NEW=true')
+    expect(fs.readFileSync('/project/.env.test.local', 'utf-8')).toBe(
+      'NEW=true',
+    )
   })
 
   it('returns not_found for files missing in source', () => {
     const { fs } = setupMockProject({})
     fs.mkdirSync('/source', { recursive: true })
 
-    const results = copyFiles(['.env.test.local'], '/source', '/project', {
-      force: false,
-      dryRun: false,
-    }, fs)
+    const results = copyFiles(
+      ['.env.test.local'],
+      '/source',
+      '/project',
+      {
+        force: false,
+        dryRun: false,
+      },
+      fs,
+    )
 
     expect(results).toStrictEqual([
       { file: '.env.test.local', status: 'not_found' },
@@ -96,10 +126,16 @@ describe('copyFiles', () => {
     fs.mkdirSync('/source', { recursive: true })
     fs.writeFileSync('/source/.env.test.local', 'TEST=true')
 
-    const results = copyFiles(['.env.test.local'], '/source', '/project', {
-      force: false,
-      dryRun: true,
-    }, fs)
+    const results = copyFiles(
+      ['.env.test.local'],
+      '/source',
+      '/project',
+      {
+        force: false,
+        dryRun: true,
+      },
+      fs,
+    )
 
     expect(results).toStrictEqual([
       { file: '.env.test.local', status: 'copied' },
@@ -114,10 +150,16 @@ describe('copyFiles', () => {
     fs.mkdirSync('/source', { recursive: true })
     fs.writeFileSync('/source/.env.test.local', 'NEW=true')
 
-    const results = copyFiles(['.env.test.local'], '/source', '/project', {
-      force: false,
-      dryRun: true,
-    }, fs)
+    const results = copyFiles(
+      ['.env.test.local'],
+      '/source',
+      '/project',
+      {
+        force: false,
+        dryRun: true,
+      },
+      fs,
+    )
 
     expect(results).toStrictEqual([
       { file: '.env.test.local', status: 'skipped' },
