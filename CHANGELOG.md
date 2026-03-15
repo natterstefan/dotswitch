@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/natterstefan/dotswitch/compare/v1.2.0...v1.3.0) (2026-03-15)
+
+
+### Features
+
+* add copy command and extraFiles config for worktrees ([#8](https://github.com/natterstefan/dotswitch/issues/8)) ([16efc58](https://github.com/natterstefan/dotswitch/commit/16efc5829d39ddac9137a4cf10cd175456956506))
+
 ## [1.2.0](https://github.com/natterstefan/dotswitch/compare/v1.1.1...v1.2.0) (2026-03-10)
 
 
