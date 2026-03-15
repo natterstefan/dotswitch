@@ -1,6 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { EnvFile } from '../../src/types.js'
 
+vi.mock('../../src/lib/config.js', async importOriginal => {
+  const actual =
+    await importOriginal<typeof import('../../src/lib/config.js')>()
+  return { ...actual, loadConfig: vi.fn() }
+})
+
+vi.mock('../../src/lib/copy.js', async importOriginal => {
+  const actual = await importOriginal<typeof import('../../src/lib/copy.js')>()
+  return { ...actual, copyFiles: vi.fn() }
+})
+
 vi.mock('../../src/lib/env.js', async importOriginal => {
   const actual = await importOriginal<typeof import('../../src/lib/env.js')>()
   return {
@@ -16,9 +27,13 @@ vi.mock('../../src/lib/prompt.js', () => ({
 }))
 
 import { useCommand } from '../../src/commands/use.js'
+import { loadConfig } from '../../src/lib/config.js'
+import { copyFiles } from '../../src/lib/copy.js'
 import { getActiveEnv, listEnvFiles, switchEnv } from '../../src/lib/env.js'
 import { promptEnvSelection } from '../../src/lib/prompt.js'
 
+const mockedLoadConfig = vi.mocked(loadConfig)
+const mockedCopyFiles = vi.mocked(copyFiles)
 const mockedListEnvFiles = vi.mocked(listEnvFiles)
 const mockedSwitchEnv = vi.mocked(switchEnv)
 const mockedGetActiveEnv = vi.mocked(getActiveEnv)
@@ -45,6 +60,12 @@ describe('useCommand', () => {
     process.exitCode = undefined
     mockedListEnvFiles.mockReturnValue(defaultFiles)
     mockedGetActiveEnv.mockReturnValue(null)
+    mockedLoadConfig.mockReturnValue({
+      target: '.env.local',
+      exclude: [],
+      hooks: {},
+      extraFiles: [],
+    })
   })
 
   it('switches to the specified environment', async () => {
@@ -171,6 +192,81 @@ describe('useCommand', () => {
     )
     expect(consoleSpy).not.toHaveBeenCalledWith(
       expect.stringContaining('Would back up'),
+    )
+  })
+
+  it('copies extraFiles from sourceDir after switching', async () => {
+    mockedLoadConfig.mockReturnValue({
+      target: '.env.local',
+      exclude: [],
+      hooks: {},
+      extraFiles: ['.env.test.local'],
+    })
+    mockedCopyFiles.mockReturnValue([
+      { file: '.env.test.local', status: 'copied' },
+    ])
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+
+    await useCommand('staging', {
+      force: false,
+      backup: true,
+      dryRun: false,
+      path: '/worktree',
+      sourceDir: '/main-repo',
+    })
+
+    expect(mockedSwitchEnv).toHaveBeenCalled()
+    expect(mockedCopyFiles).toHaveBeenCalledWith(
+      ['.env.test.local'],
+      '/main-repo',
+      '/worktree',
+      { force: true, dryRun: false },
+    )
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining('.env.test.local'),
+    )
+  })
+
+  it('does not copy extraFiles when no sourceDir (not a worktree)', async () => {
+    mockedLoadConfig.mockReturnValue({
+      target: '.env.local',
+      exclude: [],
+      hooks: {},
+      extraFiles: ['.env.test.local'],
+    })
+
+    await useCommand('staging', {
+      force: false,
+      backup: true,
+      dryRun: false,
+      path: '/p',
+    })
+
+    expect(mockedSwitchEnv).toHaveBeenCalled()
+    expect(mockedCopyFiles).not.toHaveBeenCalled()
+  })
+
+  it('--dry-run shows extraFiles that would be copied', async () => {
+    mockedLoadConfig.mockReturnValue({
+      target: '.env.local',
+      exclude: [],
+      hooks: {},
+      extraFiles: ['.env.test.local'],
+    })
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+
+    await useCommand('staging', {
+      force: false,
+      backup: false,
+      dryRun: true,
+      path: '/worktree',
+      sourceDir: '/main-repo',
+    })
+
+    expect(mockedSwitchEnv).not.toHaveBeenCalled()
+    expect(mockedCopyFiles).not.toHaveBeenCalled()
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Would copy .env.test.local'),
     )
   })
 

@@ -18,6 +18,7 @@ describe('config', () => {
       expect(config.target).toBe('.env.local')
       expect(config.exclude).toStrictEqual([])
       expect(config.hooks).toStrictEqual({})
+      expect(config.extraFiles).toStrictEqual([])
     })
   })
 

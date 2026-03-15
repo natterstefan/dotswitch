@@ -556,6 +556,44 @@ describe('integration: real filesystem', () => {
         ).toBe(true)
       })
     })
+
+    describe('extraFiles with switchEnv + copyFiles', () => {
+      it('copies extraFiles from main repo after switching in worktree', () => {
+        // Add an extra file to the main repo
+        fs.writeFileSync(
+          path.join(mainRepoDir, '.env.test.local'),
+          'TEST_DB=localhost\n',
+        )
+
+        // Switch env in worktree using main repo as source
+        switchEnv(worktreeDir, 'staging', {
+          backup: false,
+          sourceDir: mainRepoDir,
+        })
+
+        // Then copy extra files (as useCommand would do)
+        const config = loadConfig(mainRepoDir)
+        expect(config.extraFiles).toStrictEqual([])
+
+        // Simulate config with extraFiles
+        const results = copyFiles(
+          ['.env.test.local'],
+          mainRepoDir,
+          worktreeDir,
+          { force: true, dryRun: false },
+        )
+
+        expect(results).toStrictEqual([
+          { file: '.env.test.local', status: 'copied' },
+        ])
+        expect(
+          fs.readFileSync(path.join(worktreeDir, '.env.test.local'), 'utf-8'),
+        ).toBe('TEST_DB=localhost\n')
+
+        // Env was also switched
+        expect(getActiveEnv(worktreeDir)).toBe('staging')
+      })
+    })
   })
 
   describe('programmatic API with worktrees', () => {
