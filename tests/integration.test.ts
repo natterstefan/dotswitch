@@ -13,6 +13,7 @@ import {
 } from '../src/lib/env.js'
 import { resolveProjectRoot } from '../src/lib/git.js'
 import { installHook } from '../src/lib/hooks.js'
+import { copyFiles } from '../src/lib/copy.js'
 import { diffEnvMaps, parseEnvContent } from '../src/lib/parser.js'
 
 function git(cwd: string, ...args: string[]): string {
@@ -454,6 +455,102 @@ describe('integration: real filesystem', () => {
       const rebased = path.resolve(projectRoot, relative)
 
       expect(rebased).toBe(path.join(mainRepoDir, 'apps'))
+    })
+
+    describe('copy files from main repo to worktree', () => {
+      it('copies a file from main repo root to worktree', () => {
+        fs.writeFileSync(
+          path.join(mainRepoDir, '.env.test.local'),
+          'TEST_DB=localhost\n',
+        )
+
+        const results = copyFiles(
+          ['.env.test.local'],
+          mainRepoDir,
+          worktreeDir,
+          { force: false, dryRun: false },
+        )
+
+        expect(results).toStrictEqual([
+          { file: '.env.test.local', status: 'copied' },
+        ])
+        expect(
+          fs.readFileSync(path.join(worktreeDir, '.env.test.local'), 'utf-8'),
+        ).toBe('TEST_DB=localhost\n')
+      })
+
+      it('skips when file already exists in worktree', () => {
+        fs.writeFileSync(
+          path.join(mainRepoDir, '.env.test.local'),
+          'TEST_DB=main\n',
+        )
+        fs.writeFileSync(
+          path.join(worktreeDir, '.env.test.local'),
+          'TEST_DB=worktree\n',
+        )
+
+        const results = copyFiles(
+          ['.env.test.local'],
+          mainRepoDir,
+          worktreeDir,
+          { force: false, dryRun: false },
+        )
+
+        expect(results).toStrictEqual([
+          { file: '.env.test.local', status: 'skipped' },
+        ])
+        expect(
+          fs.readFileSync(path.join(worktreeDir, '.env.test.local'), 'utf-8'),
+        ).toBe('TEST_DB=worktree\n')
+      })
+
+      it('overwrites with --force', () => {
+        fs.writeFileSync(
+          path.join(mainRepoDir, '.env.test.local'),
+          'TEST_DB=main\n',
+        )
+        fs.writeFileSync(
+          path.join(worktreeDir, '.env.test.local'),
+          'TEST_DB=worktree\n',
+        )
+
+        const results = copyFiles(
+          ['.env.test.local'],
+          mainRepoDir,
+          worktreeDir,
+          { force: true, dryRun: false },
+        )
+
+        expect(results).toStrictEqual([
+          { file: '.env.test.local', status: 'copied' },
+        ])
+        expect(
+          fs.readFileSync(path.join(worktreeDir, '.env.test.local'), 'utf-8'),
+        ).toBe('TEST_DB=main\n')
+      })
+
+      it('copies multiple files in one call', () => {
+        fs.writeFileSync(
+          path.join(mainRepoDir, '.env.test.local'),
+          'TEST=true\n',
+        )
+        fs.writeFileSync(
+          path.join(mainRepoDir, '.env.cypress.local'),
+          'CY=true\n',
+        )
+
+        const results = copyFiles(
+          ['.env.test.local', '.env.cypress.local'],
+          mainRepoDir,
+          worktreeDir,
+          { force: false, dryRun: false },
+        )
+
+        expect(results).toHaveLength(2)
+        expect(results.every(r => r.status === 'copied')).toBe(true)
+        expect(fs.existsSync(path.join(worktreeDir, '.env.test.local'))).toBe(true)
+        expect(fs.existsSync(path.join(worktreeDir, '.env.cypress.local'))).toBe(true)
+      })
     })
   })
 
