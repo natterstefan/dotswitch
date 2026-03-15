@@ -17,3 +17,8 @@ export interface CommonOptions {
   path: string
   json: boolean
 }
+
+export interface CopyOptions {
+  force: boolean
+  dryRun: boolean
+}
