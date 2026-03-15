@@ -23,12 +23,15 @@ export interface DotswitchConfig {
   exclude: string[]
   /** Branch-to-env mappings for git hook auto-switching */
   hooks: Record<string, string>
+  /** Extra files to copy from the main repo root on every switch (worktrees only) */
+  extraFiles: string[]
 }
 
 export const DEFAULT_CONFIG: DotswitchConfig = {
   target: '.env.local',
   exclude: [],
   hooks: {},
+  extraFiles: [],
 }
 
 /**
@@ -52,6 +55,7 @@ function mergeWithDefaults(raw: Partial<DotswitchConfig>): DotswitchConfig {
     target: raw.target ?? DEFAULT_CONFIG.target,
     exclude: raw.exclude ?? DEFAULT_CONFIG.exclude,
     hooks: raw.hooks ?? DEFAULT_CONFIG.hooks,
+    extraFiles: raw.extraFiles ?? DEFAULT_CONFIG.extraFiles,
   }
 }
 

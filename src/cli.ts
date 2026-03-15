@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 import { Command } from 'commander'
+import { copyCommand } from './commands/copy.js'
 import { currentCommand } from './commands/current.js'
 import { diffCommand } from './commands/diff.js'
 import {
@@ -158,6 +159,24 @@ program
       path: resolveCommandPath(opts.path),
       showValues: opts.showValues,
       json: opts.json,
+    })
+  })
+
+program
+  .command('copy <files...>')
+  .description('Copy files from the main repo root into the current worktree')
+  .option('-f, --force', 'overwrite if target already exists', false)
+  .option(
+    '-n, --dry-run',
+    'show what would happen without making changes',
+    false,
+  )
+  .option('-p, --path <dir>', 'project directory')
+  .action((files: string[], opts) => {
+    copyCommand(files, {
+      force: opts.force,
+      dryRun: opts.dryRun,
+      cwd: opts.path ? opts.path : process.cwd(),
     })
   })
 
