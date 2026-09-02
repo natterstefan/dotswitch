@@ -33,7 +33,7 @@ export function listEnvFiles(
     backup,
   ])
 
-  return entries
+  const files = entries
     .filter(name => name.startsWith('.env.') && !excluded.has(name))
     .sort()
     .map(name => {
@@ -45,6 +45,9 @@ export function listEnvFiles(
         active: env === activeEnv,
       }
     })
+
+  logger.debug(`env: found ${files.length} env file(s) in ${dir}`)
+  return files
 }
 
 export function getActiveEnv(
@@ -56,8 +59,11 @@ export function getActiveEnv(
   const targetPath = path.join(dir, getTargetFile(cfg))
   try {
     const content = fsModule.readFileSync(targetPath, 'utf-8')
-    return parseTrackerHeader(content)
+    const active = parseTrackerHeader(content)
+    logger.debug(`env: active environment is ${active ?? 'none'}`)
+    return active
   } catch {
+    logger.debug('env: no active environment (target file missing)')
     return null
   }
 }
@@ -115,12 +121,16 @@ export function switchEnv(
   const sourcePath = path.join(srcDir, `.env.${env}`)
   const targetPath = path.join(dir, getTargetFile(cfg))
 
+  logger.debug(`env: switching to .env.${env}`)
+  logger.debug(`env: source=${sourcePath}, target=${targetPath}`)
+
   if (!fsModule.existsSync(sourcePath)) {
     throw new Error(`Environment file .env.${env} does not exist`)
   }
 
   if (options.backup) {
     backupEnvLocal(dir, fsModule, cfg)
+    logger.debug('env: backup created')
   }
 
   const content = fsModule.readFileSync(sourcePath, 'utf-8')

@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { createJiti } from 'jiti'
+import { logger } from './logger.js'
 
 /**
  * Config file search order (first match wins):
@@ -73,8 +74,10 @@ function loadJsConfig(
       raw && typeof raw === 'object' && 'default' in raw ? raw.default : raw
 
     return config as Partial<DotswitchConfig>
-  } catch {
-    // Invalid config — fall through
+  } catch (error) {
+    logger.debug(
+      `config: failed to load ${configPath}: ${error instanceof Error ? error.message : String(error)}`,
+    )
     return undefined
   }
 }
@@ -88,11 +91,17 @@ export function loadConfig(
     if (fsModule.existsSync(configPath)) {
       const raw = loadJsConfig(configPath)
       if (raw) {
-        return mergeWithDefaults(raw)
+        const config = mergeWithDefaults(raw)
+        logger.debug(`config: loaded ${filename} from ${dir}`)
+        logger.debug(
+          `config: target=${config.target}, exclude=[${config.exclude.join(', ')}], hooks={${Object.keys(config.hooks).join(', ')}}`,
+        )
+        return config
       }
     }
   }
 
+  logger.debug(`config: no config file found in ${dir}, using defaults`)
   return { ...DEFAULT_CONFIG }
 }
 
